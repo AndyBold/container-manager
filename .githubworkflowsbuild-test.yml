@@ -1,0 +1,50 @@
+name: Build Test
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  build:
+    runs-on: macos-14
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+      
+      - name: Show Xcode version
+        run: xcodebuild -version
+      
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -scheme container-manager \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
+      
+      - name: Build app
+        run: |
+          xcodebuild clean build \
+            -scheme container-manager \
+            -configuration Release \
+            -derivedDataPath ./build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+      
+      - name: Verify build output
+        run: |
+          APP_PATH=$(find ./build -name "container-manager.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ Build failed - app not found"
+            exit 1
+          fi
+          echo "✅ Build successful"
+          echo "App location: $APP_PATH"
+          ls -lh "$APP_PATH"

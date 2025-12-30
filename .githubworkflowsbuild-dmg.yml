@@ -1,0 +1,97 @@
+name: Build and Package DMG
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build:
+    runs-on: macos-14  # Use macOS 14 (Sonoma) with Xcode 15+
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+      
+      - name: Show Xcode version
+        run: xcodebuild -version
+      
+      - name: Build app
+        run: |
+          xcodebuild clean build \
+            -scheme container-manager \
+            -configuration Release \
+            -derivedDataPath ./build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+      
+      - name: Find built app
+        id: find_app
+        run: |
+          APP_PATH=$(find ./build -name "container-manager.app" -type d | head -n 1)
+          echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
+          echo "Found app at: $APP_PATH"
+          ls -la "$APP_PATH"
+      
+      - name: Create DMG
+        run: |
+          # Install create-dmg if not available
+          brew install create-dmg || true
+          
+          # Create a folder for DMG contents
+          mkdir -p dmg_contents
+          
+          # Copy the app to the DMG folder
+          cp -R "${{ steps.find_app.outputs.app_path }}" dmg_contents/
+          
+          # Get version from tag or use "dev"
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION="dev-$(date +%Y%m%d)"
+          fi
+          
+          DMG_NAME="container-manager-${VERSION}.dmg"
+          
+          # Create the DMG
+          create-dmg \
+            --volname "Container Manager" \
+            --volicon "dmg_contents/container-manager.app/Contents/Resources/AppIcon.icns" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "container-manager.app" 175 120 \
+            --hide-extension "container-manager.app" \
+            --app-drop-link 425 120 \
+            --no-internet-enable \
+            "$DMG_NAME" \
+            "dmg_contents/" || \
+          # Fallback to simpler DMG creation if create-dmg fails
+          hdiutil create -volname "Container Manager" -srcfolder dmg_contents -ov -format UDZO "$DMG_NAME"
+          
+          echo "dmg_name=$DMG_NAME" >> $GITHUB_OUTPUT
+          ls -lh "$DMG_NAME"
+        id: create_dmg
+      
+      - name: Upload DMG as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-manager-dmg
+          path: "*.dmg"
+          retention-days: 90
+      
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "*.dmg"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
