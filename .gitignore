@@ -1,0 +1,42 @@
+# .gitignore file created for free with Tower (https://www.git-tower.com/)
+# For suggestions or improvements please contact us using support@git-tower.com
+# Generated on 2025-12-30
+# Includes: swift
+
+### Universal ###
+# Common files that should be ignored in all projects
+
+# Logs
+*.log
+# Temporary files
+*.tmp
+*~
+
+*.bak
+# Environment files (containing secrets, API keys, credentials)
+.env
+*.env
+.env.*
+
+# Local configuration that shouldn't be shared
+*.local
+
+### Swift ###
+# swift specific files
+
+build/
+.build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+timeline.xctimeline
+Packages/
+*.xcarchive
+Dependencies/
+.accio/
+
+*.o
+*.ipa
+*.dSYM
+*.dSYM.zip
