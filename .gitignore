@@ -21,6 +21,8 @@
 # Local configuration that shouldn't be shared
 *.local
 
+*.dmg
+
 ### Swift ###
 # swift specific files
 

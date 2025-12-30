@@ -24,6 +24,11 @@
 		125A83CC2F046F6D009B75F9 /* .githubworkflowsbuild-dmg 2.yml in Resources */ = {isa = PBXBuildFile; fileRef = 125A83CB2F046F6D009B75F9 /* .githubworkflowsbuild-dmg 2.yml */; };
 		125A83CE2F046F80009B75F9 /* .githubworkflowsbuild-signed-dmg 2.yml in Resources */ = {isa = PBXBuildFile; fileRef = 125A83CD2F046F80009B75F9 /* .githubworkflowsbuild-signed-dmg 2.yml */; };
 		125A83D02F046F87009B75F9 /* .githubworkflowsbuild-test 2.yml in Resources */ = {isa = PBXBuildFile; fileRef = 125A83CF2F046F87009B75F9 /* .githubworkflowsbuild-test 2.yml */; };
+		125A83D22F04735C009B75F9 /* scriptsgenerate-icon.sh in Resources */ = {isa = PBXBuildFile; fileRef = 125A83D12F04735C009B75F9 /* scriptsgenerate-icon.sh */; };
+		125A83D42F047372009B75F9 /* scriptscreate-icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125A83D32F047372009B75F9 /* scriptscreate-icon.swift */; };
+		125A83D62F04739F009B75F9 /* CREATING-APP-ICON.md in Resources */ = {isa = PBXBuildFile; fileRef = 125A83D52F04739F009B75F9 /* CREATING-APP-ICON.md */; };
+		125A83D82F0473B4009B75F9 /* scriptsiconset-from-png.sh in Resources */ = {isa = PBXBuildFile; fileRef = 125A83D72F0473B4009B75F9 /* scriptsiconset-from-png.sh */; };
+		125A83DA2F0473BE009B75F9 /* ICON-QUICK-REF.md in Resources */ = {isa = PBXBuildFile; fileRef = 125A83D92F0473BE009B75F9 /* ICON-QUICK-REF.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +67,11 @@
 		125A83CB2F046F6D009B75F9 /* .githubworkflowsbuild-dmg 2.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = ".githubworkflowsbuild-dmg 2.yml"; sourceTree = "<group>"; };
 		125A83CD2F046F80009B75F9 /* .githubworkflowsbuild-signed-dmg 2.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = ".githubworkflowsbuild-signed-dmg 2.yml"; sourceTree = "<group>"; };
 		125A83CF2F046F87009B75F9 /* .githubworkflowsbuild-test 2.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = ".githubworkflowsbuild-test 2.yml"; sourceTree = "<group>"; };
+		125A83D12F04735C009B75F9 /* scriptsgenerate-icon.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "scriptsgenerate-icon.sh"; sourceTree = "<group>"; };
+		125A83D32F047372009B75F9 /* scriptscreate-icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "scriptscreate-icon.swift"; sourceTree = "<group>"; };
+		125A83D52F04739F009B75F9 /* CREATING-APP-ICON.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "CREATING-APP-ICON.md"; sourceTree = "<group>"; };
+		125A83D72F0473B4009B75F9 /* scriptsiconset-from-png.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "scriptsiconset-from-png.sh"; sourceTree = "<group>"; };
+		125A83D92F0473BE009B75F9 /* ICON-QUICK-REF.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "ICON-QUICK-REF.md"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -150,6 +160,11 @@
 				125A83CB2F046F6D009B75F9 /* .githubworkflowsbuild-dmg 2.yml */,
 				125A83CD2F046F80009B75F9 /* .githubworkflowsbuild-signed-dmg 2.yml */,
 				125A83CF2F046F87009B75F9 /* .githubworkflowsbuild-test 2.yml */,
+				125A83D12F04735C009B75F9 /* scriptsgenerate-icon.sh */,
+				125A83D32F047372009B75F9 /* scriptscreate-icon.swift */,
+				125A83D52F04739F009B75F9 /* CREATING-APP-ICON.md */,
+				125A83D72F0473B4009B75F9 /* scriptsiconset-from-png.sh */,
+				125A83D92F0473BE009B75F9 /* ICON-QUICK-REF.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -292,14 +307,18 @@
 			files = (
 				125A83C22F046D4A009B75F9 /* .githubworkflowsbuild-test.yml in Resources */,
 				125A83CE2F046F80009B75F9 /* .githubworkflowsbuild-signed-dmg 2.yml in Resources */,
+				125A83D82F0473B4009B75F9 /* scriptsiconset-from-png.sh in Resources */,
+				125A83D62F04739F009B75F9 /* CREATING-APP-ICON.md in Resources */,
 				125A83C62F046D81009B75F9 /* DMG-SETUP-COMPLETE.md in Resources */,
 				125A83CA2F046DA3009B75F9 /* README-DMG.md in Resources */,
 				125A83D02F046F87009B75F9 /* .githubworkflowsbuild-test 2.yml in Resources */,
 				125A83BC2F046D21009B75F9 /* BUILDING.md in Resources */,
 				125A83B82F046CED009B75F9 /* .githubworkflowsbuild-dmg.yml in Resources */,
 				125A83CC2F046F6D009B75F9 /* .githubworkflowsbuild-dmg 2.yml in Resources */,
+				125A83D22F04735C009B75F9 /* scriptsgenerate-icon.sh in Resources */,
 				125A83C82F046D87009B75F9 /* .gitignore 2 in Resources */,
 				125A83BE2F046D31009B75F9 /* scriptscreate-dmg.sh in Resources */,
+				125A83DA2F0473BE009B75F9 /* ICON-QUICK-REF.md in Resources */,
 				125A83BA2F046D01009B75F9 /* .githubworkflowsbuild-signed-dmg.yml in Resources */,
 				125A83C02F046D42009B75F9 /* QUICKSTART-DMG.md in Resources */,
 			);
@@ -330,6 +349,7 @@
 				125A83C42F046D5A009B75F9 /* Makefile in Sources */,
 				125A83B62F046997009B75F9 /* ContainerSystemMonitorValidation.swift in Sources */,
 				125A83B12F04689A009B75F9 /* ContainerSystemMonitorTests.swift in Sources */,
+				125A83D42F047372009B75F9 /* scriptscreate-icon.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
