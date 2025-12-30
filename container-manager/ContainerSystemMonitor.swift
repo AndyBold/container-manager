@@ -120,12 +120,11 @@ class ContainerSystemMonitor: ObservableObject {
             if process.terminationStatus == 0 {
                 let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
                 if let output = String(data: data, encoding: .utf8) {
-                    await parseContainerOutput(output)
-                }
-                
-                await MainActor.run {
-                    status = .running
-                    lastUpdated = Date()
+                    await MainActor.run {
+                        self.parseContainerOutput(output)
+                        self.status = .running
+                        self.lastUpdated = Date()
+                    }
                 }
             } else {
                 // Container command failed
