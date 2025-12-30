@@ -3,12 +3,12 @@ name: Build and Package DMG
 on:
   push:
     tags:
-      - 'v*'  # Trigger on version tags like v1.0.0
-  workflow_dispatch:  # Allow manual triggering
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-14  # Use macOS 14 (Sonoma) with Xcode 15+
+    runs-on: macos-14
     
     steps:
       - name: Checkout code
@@ -40,16 +40,10 @@ jobs:
       
       - name: Create DMG
         run: |
-          # Install create-dmg if not available
           brew install create-dmg || true
-          
-          # Create a folder for DMG contents
           mkdir -p dmg_contents
-          
-          # Copy the app to the DMG folder
           cp -R "${{ steps.find_app.outputs.app_path }}" dmg_contents/
           
-          # Get version from tag or use "dev"
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
@@ -58,10 +52,8 @@ jobs:
           
           DMG_NAME="container-manager-${VERSION}.dmg"
           
-          # Create the DMG
           create-dmg \
             --volname "Container Manager" \
-            --volicon "dmg_contents/container-manager.app/Contents/Resources/AppIcon.icns" \
             --window-pos 200 120 \
             --window-size 600 400 \
             --icon-size 100 \
@@ -71,7 +63,6 @@ jobs:
             --no-internet-enable \
             "$DMG_NAME" \
             "dmg_contents/" || \
-          # Fallback to simpler DMG creation if create-dmg fails
           hdiutil create -volname "Container Manager" -srcfolder dmg_contents -ov -format UDZO "$DMG_NAME"
           
           echo "dmg_name=$DMG_NAME" >> $GITHUB_OUTPUT
