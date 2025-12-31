@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct container_managerApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var containerMonitor = ContainerSystemMonitor()
     
     var body: some Scene {
@@ -43,3 +44,11 @@ struct container_managerApp: App {
         }
     }
 }
+// AppDelegate to hide from Dock and App Switcher
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Hide from Dock and Cmd+Tab switcher
+        NSApp.setActivationPolicy(.accessory)
+    }
+}
+
