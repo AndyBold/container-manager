@@ -6,6 +6,32 @@ A native macOS menu bar application for monitoring and managing containers. Buil
 ![Swift](https://img.shields.io/badge/Swift-5.9+-orange)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-native-green)
 
+## 📸 Screenshots
+
+<p align="center">
+  <img src="screenshots/menu-bar.png" alt="Menu Bar" width="600">
+  <br>
+  <em>Container Manager living in your menu bar</em>
+</p>
+
+<p align="center">
+  <img src="screenshots/main-window.png" alt="Main Window" width="600">
+  <br>
+  <em>Clean interface showing running and stopped containers</em>
+</p>
+
+<p align="center">
+  <img src="screenshots/container-details.png" alt="Container Details" width="600">
+  <br>
+  <em>Expanded container view with detailed information</em>
+</p>
+
+<p align="center">
+  <img src="screenshots/context-menu.png" alt="Context Menu" width="600">
+  <br>
+  <em>Quick actions available for each container</em>
+</p>
+
 ## ✨ Features
 
 ### 🎯 Core Functionality
