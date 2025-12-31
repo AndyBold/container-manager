@@ -1,44 +1,50 @@
-# .gitignore file created for free with Tower (https://www.git-tower.com/)
-# For suggestions or improvements please contact us using support@git-tower.com
-# Generated on 2025-12-30
-# Includes: swift
-
-### Universal ###
-# Common files that should be ignored in all projects
-
-# Logs
-*.log
-# Temporary files
-*.tmp
-*~
-
-*.bak
-# Environment files (containing secrets, API keys, credentials)
-.env
-*.env
-.env.*
-
-# Local configuration that shouldn't be shared
-*.local
-
-*.dmg
-
-### Swift ###
-# swift specific files
-
+# Xcode
 build/
-.build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
 DerivedData/
-*.xcodeproj/xcuserdata/
-*.xcworkspace/xcuserdata/
-
-timeline.xctimeline
-Packages/
-*.xcarchive
-Dependencies/
-.accio/
-
-*.o
+*.hmap
 *.ipa
-*.dSYM
-*.dSYM.zip
+*.xcuserstate
+*.xcscmblueprint
+
+# Xcode Workspace
+*.xcworkspace/xcuserdata/
+*.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+
+# Swift Package Manager
+.swiftpm/
+*.swiftpm
+.build/
+Package.resolved
+
+# DMG
+*.dmg
+dmg_contents/
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Injection
+iOSInjectionProject/
+
+# macOS
+.DS_Store
