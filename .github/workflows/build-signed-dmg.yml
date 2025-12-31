@@ -2,142 +2,198 @@ name: Build Signed DMG
 
 on:
   push:
+    branches: [ main ]
     tags:
-      - 'v*'  # Trigger on version tags like v1.0.0
-  workflow_dispatch:  # Allow manual triggering
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  APP_NAME: "Container Manager"
+  SCHEME: "container-manager"
 
 jobs:
   build:
     runs-on: macos-14
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
-      
-      - name: Show Xcode version
-        run: xcodebuild -version
-      
-      # Optional: Import signing certificates
-      # To use this, you need to:
-      # 1. Export your Developer ID Application certificate as .p12
-      # 2. Base64 encode it: base64 -i certificate.p12 | pbcopy
-      # 3. Add it as a GitHub secret named MACOS_CERTIFICATE
-      # 4. Add the certificate password as MACOS_CERTIFICATE_PWD
-      - name: Import Code Signing Certificates
-        if: ${{ secrets.MACOS_CERTIFICATE != '' }}
-        uses: apple-actions/import-codesign-certs@v2
-        with:
-          p12-file-base64: ${{ secrets.MACOS_CERTIFICATE }}
-          p12-password: ${{ secrets.MACOS_CERTIFICATE_PWD }}
-      
-      - name: Build app (Signed)
-        if: ${{ secrets.MACOS_CERTIFICATE != '' }}
-        run: |
-          xcodebuild clean build \
-            -scheme container-manager \
-            -configuration Release \
-            -derivedDataPath ./build \
-            CODE_SIGN_IDENTITY="Developer ID Application" \
-            OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime" \
-            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
-      
-      - name: Build app (Unsigned)
-        if: ${{ secrets.MACOS_CERTIFICATE == '' }}
-        run: |
-          xcodebuild clean build \
-            -scheme container-manager \
-            -configuration Release \
-            -derivedDataPath ./build \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-      
-      - name: Find built app
-        id: find_app
-        run: |
-          APP_PATH=$(find ./build -name "container-manager.app" -type d | head -n 1)
-          echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
-          echo "Found app at: $APP_PATH"
-          ls -la "$APP_PATH"
-      
-      # Optional: Notarize the app (requires Apple Developer account)
-      - name: Notarize app
-        if: ${{ secrets.MACOS_CERTIFICATE != '' && secrets.NOTARIZATION_USERNAME != '' }}
-        run: |
-          # Create a ZIP for notarization
-          ditto -c -k --keepParent "${{ steps.find_app.outputs.app_path }}" container-manager.zip
-          
-          # Submit for notarization
-          xcrun notarytool submit container-manager.zip \
-            --apple-id "${{ secrets.NOTARIZATION_USERNAME }}" \
-            --password "${{ secrets.NOTARIZATION_PASSWORD }}" \
-            --team-id "${{ secrets.APPLE_TEAM_ID }}" \
-            --wait
-          
-          # Staple the notarization ticket
-          xcrun stapler staple "${{ steps.find_app.outputs.app_path }}"
-      
-      - name: Install create-dmg
-        run: brew install create-dmg
-      
-      - name: Create DMG
-        run: |
-          # Create a folder for DMG contents
-          mkdir -p dmg_contents
-          
-          # Copy the app to the DMG folder
-          cp -R "${{ steps.find_app.outputs.app_path }}" dmg_contents/
-          
-          # Get version from tag or use "dev"
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          else
-            VERSION="dev-$(date +%Y%m%d)"
-          fi
-          
-          DMG_NAME="container-manager-${VERSION}.dmg"
-          
-          # Create the DMG
-          create-dmg \
-            --volname "Container Manager" \
-            --window-pos 200 120 \
-            --window-size 600 400 \
-            --icon-size 100 \
-            --icon "container-manager.app" 175 120 \
-            --hide-extension "container-manager.app" \
-            --app-drop-link 425 120 \
-            --no-internet-enable \
-            "$DMG_NAME" \
-            "dmg_contents/" || \
-          hdiutil create -volname "Container Manager" -srcfolder dmg_contents -ov -format UDZO "$DMG_NAME"
-          
-          echo "dmg_name=$DMG_NAME" >> $GITHUB_OUTPUT
-          ls -lh "$DMG_NAME"
-        id: create_dmg
-      
-      # Optional: Sign the DMG itself
-      - name: Sign DMG
-        if: ${{ secrets.MACOS_CERTIFICATE != '' }}
-        run: |
-          codesign --sign "Developer ID Application" --timestamp *.dmg || true
-      
-      - name: Upload DMG as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: container-manager-dmg
-          path: "*.dmg"
-          retention-days: 90
-      
-      - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: "*.dmg"
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+    
+    - name: Show Xcode version
+      run: xcodebuild -version
+    
+    - name: Check if signing is available
+      id: check_signing
+      run: |
+        if [ -n "${{ secrets.MACOS_CERTIFICATE }}" ]; then
+          echo "signing_available=true" >> $GITHUB_OUTPUT
+        else
+          echo "signing_available=false" >> $GITHUB_OUTPUT
+        fi
+        
+        if [ -n "${{ secrets.MACOS_CERTIFICATE }}" ] && [ -n "${{ secrets.NOTARIZATION_USERNAME }}" ]; then
+          echo "notarization_available=true" >> $GITHUB_OUTPUT
+        else
+          echo "notarization_available=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Import signing certificate
+      if: steps.check_signing.outputs.signing_available == 'true'
+      run: |
+        # Create temporary keychain
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+        KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+        
+        security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+        security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+        
+        # Import certificate
+        echo "${{ secrets.MACOS_CERTIFICATE }}" | base64 --decode > certificate.p12
+        security import certificate.p12 -k "$KEYCHAIN_PATH" -P "${{ secrets.MACOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+        
+        # Add to search list
+        security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed s/\"//g)
+        
+        # Clean up
+        rm certificate.p12
+    
+    - name: Build app (Signed)
+      if: steps.check_signing.outputs.signing_available == 'true'
+      run: |
+        xcodebuild -scheme "${{ env.SCHEME }}" \
+          -configuration Release \
+          -derivedDataPath build \
+          -archivePath build/App.xcarchive \
+          archive \
+          CODE_SIGN_IDENTITY="${{ secrets.DEVELOPER_ID_APPLICATION }}" \
+          CODE_SIGN_STYLE=Manual \
+          DEVELOPMENT_TEAM="${{ secrets.TEAM_ID }}"
+    
+    - name: Build app (Unsigned)
+      if: steps.check_signing.outputs.signing_available == 'false'
+      run: |
+        xcodebuild -scheme "${{ env.SCHEME }}" \
+          -configuration Release \
+          -derivedDataPath build \
+          -archivePath build/App.xcarchive \
+          archive \
+          CODE_SIGN_IDENTITY="-" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+    
+    - name: Export app
+      run: |
+        mkdir -p build/Export
+        cp -R build/App.xcarchive/Products/Applications/*.app build/Export/
+    
+    - name: Notarize app
+      if: steps.check_signing.outputs.notarization_available == 'true'
+      run: |
+        # Create zip for notarization
+        cd build/Export
+        APP_PATH=$(find . -name "*.app" -maxdepth 1)
+        ditto -c -k --keepParent "$APP_PATH" app.zip
+        
+        # Submit for notarization
+        xcrun notarytool submit app.zip \
+          --apple-id "${{ secrets.NOTARIZATION_USERNAME }}" \
+          --password "${{ secrets.NOTARIZATION_PASSWORD }}" \
+          --team-id "${{ secrets.TEAM_ID }}" \
+          --wait
+        
+        # Staple ticket
+        xcrun stapler staple "$APP_PATH"
+        
+        # Clean up
+        rm app.zip
+    
+    - name: Create DMG
+      run: |
+        # Install create-dmg if not available
+        if ! command -v create-dmg &> /dev/null; then
+          brew install create-dmg
+        fi
+        
+        cd build/Export
+        APP_PATH=$(find . -name "*.app" -maxdepth 1)
+        APP_NAME=$(basename "$APP_PATH" .app)
+        
+        # Create DMG
+        create-dmg \
+          --volname "$APP_NAME" \
+          --window-pos 200 120 \
+          --window-size 600 400 \
+          --icon-size 100 \
+          --icon "$APP_NAME.app" 175 190 \
+          --hide-extension "$APP_NAME.app" \
+          --app-drop-link 425 190 \
+          "$APP_NAME.dmg" \
+          "$APP_PATH" || true
+        
+        # If create-dmg fails, use hdiutil
+        if [ ! -f "$APP_NAME.dmg" ]; then
+          hdiutil create -volname "$APP_NAME" -srcfolder "$APP_PATH" -ov -format UDZO "$APP_NAME.dmg"
+        fi
+    
+    - name: Sign DMG
+      if: steps.check_signing.outputs.signing_available == 'true'
+      run: |
+        cd build/Export
+        DMG_PATH=$(find . -name "*.dmg" -maxdepth 1)
+        codesign --sign "${{ secrets.DEVELOPER_ID_APPLICATION }}" --timestamp "$DMG_PATH"
+    
+    - name: Notarize DMG
+      if: steps.check_signing.outputs.notarization_available == 'true'
+      run: |
+        cd build/Export
+        DMG_PATH=$(find . -name "*.dmg" -maxdepth 1)
+        
+        # Submit for notarization
+        xcrun notarytool submit "$DMG_PATH" \
+          --apple-id "${{ secrets.NOTARIZATION_USERNAME }}" \
+          --password "${{ secrets.NOTARIZATION_PASSWORD }}" \
+          --team-id "${{ secrets.TEAM_ID }}" \
+          --wait
+        
+        # Staple ticket
+        xcrun stapler staple "$DMG_PATH"
+    
+    - name: Get version info
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else
+          VERSION="dev-$(git rev-parse --short HEAD)"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Upload DMG artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.APP_NAME }}-${{ steps.version.outputs.version }}.dmg
+        path: build/Export/*.dmg
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/Export/*.dmg
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Cleanup keychain
+      if: always() && steps.check_signing.outputs.signing_available == 'true'
+      run: |
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+        security delete-keychain "$KEYCHAIN_PATH" || true
+
