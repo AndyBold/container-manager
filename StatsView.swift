@@ -109,6 +109,15 @@ struct StatsView: View {
         return String(format: "%.0f MB", latest.memoryUsageMB)
     }
     
+    private func containerNetworkValue(for containerName: String) -> String {
+        guard let history = containerMonitor.statsCollector?.containerStats[containerName] else {
+            return "-"
+        }
+        let throughput = history.networkThroughput(for: timeRange)
+        let totalMBps = (throughput.rx + throughput.tx) / (1024 * 1024)
+        return String(format: "↓↑ %.2f MB/s", totalMBps)
+    }
+    
     // MARK: - System Overview
     
     private var systemOverviewSection: some View {
@@ -203,9 +212,13 @@ struct StatsView: View {
                                 y: .value("CPU %", point.cpuPercent)
                             )
                             .foregroundStyle(.green)
+                            .interpolationMethod(.catmullRom)
                         }
                         .chartYScale(domain: 0...100)
                         .chartXAxis(.hidden)
+                        .chartYAxis {
+                            AxisMarks(position: .leading, values: [0, 50, 100])
+                        }
                         .frame(height: 60)
                     } else {
                         Rectangle()
@@ -239,8 +252,12 @@ struct StatsView: View {
                                 y: .value("Memory MB", point.memoryUsageMB)
                             )
                             .foregroundStyle(.orange.gradient.opacity(0.6))
+                            .interpolationMethod(.catmullRom)
                         }
                         .chartXAxis(.hidden)
+                        .chartYAxis {
+                            AxisMarks(position: .leading)
+                        }
                         .frame(height: 60)
                     } else {
                         Rectangle()
@@ -252,6 +269,54 @@ struct StatsView: View {
                                     .foregroundStyle(.secondary)
                             )
                     }
+                }
+            }
+            
+            // Network I/O Chart
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Network I/O")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(containerNetworkValue(for: container.name))
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.purple)
+                }
+                
+                if let data = containerMonitor.statsCollector?.containerStats[container.name]?.dataPoints(for: timeRange), !data.isEmpty {
+                    Chart {
+                        ForEach(data) { point in
+                            LineMark(
+                                x: .value("Time", point.timestamp),
+                                y: .value("RX MB", point.networkRxMB)
+                            )
+                            .foregroundStyle(.blue)
+                            .lineStyle(StrokeStyle(lineWidth: 2))
+                            
+                            LineMark(
+                                x: .value("Time", point.timestamp),
+                                y: .value("TX MB", point.networkTxMB)
+                            )
+                            .foregroundStyle(.purple)
+                            .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 3]))
+                        }
+                    }
+                    .chartXAxis(.hidden)
+                    .chartYAxis {
+                        AxisMarks(position: .leading)
+                    }
+                    .frame(height: 60)
+                } else {
+                    Rectangle()
+                        .fill(Color.purple.opacity(0.1))
+                        .frame(height: 60)
+                        .overlay(
+                            Text("No data")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        )
                 }
             }
         }

@@ -105,7 +105,7 @@ Use this checklist to track your progress implementing the desktop application f
 - [x] Subnet/IP validation
 - [x] 35+ comprehensive tests
 
-## Phase 5: Statistics & Monitoring (In Progress - 60% Complete)
+## Phase 5: Statistics & Monitoring (In Progress - 80% Complete)
 
 ### Data Collection ✅
 - [x] Create `ContainerStats.swift` model (integrated into ContainerSystemMonitor)
@@ -118,17 +118,18 @@ Use this checklist to track your progress implementing the desktop application f
 - [x] Define data retention policy (6 hours, 2160 data points)
 - [x] Background collection task (10-second intervals)
 
-### Stats Dashboard (Partial)
+### Stats Dashboard ✅
 - [x] Enhance `StatsView.swift`
 - [x] System overview real data
   - [x] Total CPU usage
   - [x] Total memory usage
   - [x] Network throughput
 - [x] Per-container charts
-  - [x] CPU line chart
-  - [x] Memory area chart
-  - [ ] Network I/O chart
+  - [x] CPU line chart with smooth interpolation
+  - [x] Memory area chart with gradient
+  - [x] Network I/O chart (RX/TX dual lines)
 - [x] Implement time range selector (connected to data filtering)
+- [x] Chart styling and polish (axis marks, interpolation)
 - [ ] Add chart interactions (zoom, pan)
 - [ ] Export stats data
 
