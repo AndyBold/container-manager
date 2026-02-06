@@ -70,7 +70,7 @@ Use this checklist to track your progress implementing the desktop application f
 - [x] Filter dangling images
 - [x] Search images
 
-## Phase 4: Advanced Management ✅ 85% Complete!
+## Phase 4: Advanced Management ✅ COMPLETE!
 
 ### Volume Management ✅
 - [x] Enhance `VolumeListView.swift`
@@ -88,19 +88,19 @@ Use this checklist to track your progress implementing the desktop application f
 - [x] Volume inspection
 - [x] 28 comprehensive tests
 
-### Network Management ✅ (Backend Complete)
-- [ ] Enhance `NetworkListView.swift` (UI pending)
+### Network Management ✅ COMPLETE!
+- [x] Enhance `NetworkListView.swift` with full UI
 - [x] Parse network list command
 - [x] Create `NetworkInfo` data model
-- [x] Display network table (placeholder)
-- [x] Create network dialog (backend ready)
+- [x] Display network table with sortable columns
+- [x] Create network dialog with validation
   - [x] Name input
   - [x] Driver selection
   - [x] Subnet configuration
   - [x] Gateway settings
 - [x] Remove networks with checks
-- [x] Show connected containers (backend)
-- [x] Network inspection details
+- [x] Show connected containers
+- [x] Network inspection details with inspector sheet
 - [x] Connect/disconnect containers
 - [x] Subnet/IP validation
 - [x] 35+ comprehensive tests

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var containerMonitor: ContainerSystemMonitor
+    @Environment(\.openWindow) private var openWindow
     @State private var showStopConfirmation = false
     @State private var hasShownInitialPrompt = false
     
@@ -217,7 +218,7 @@ struct ContentView: View {
             Divider()
             
             // Footer with actions
-            VStack(spacing: 4) {
+            VStack(spacing: 8) {
                 HStack {
                     Text("Last updated: \(containerMonitor.lastUpdated, style: .relative) ago")
                         .font(.caption2)
@@ -226,56 +227,72 @@ struct ContentView: View {
                     Spacer()
                 }
                 
-                HStack {
+                // Primary actions row
+                HStack(spacing: 6) {
                     Button("Open Manager") {
                         openDesktopWindow()
                     }
                     .keyboardShortcut("m", modifiers: .command)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                     
                     Button("Refresh") {
                         containerMonitor.checkContainerStatus()
                     }
                     .keyboardShortcut("r", modifiers: .command)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                     .disabled(containerMonitor.isOperating)
-                    
-                    Spacer()
-                    
+                }
+                
+                // Service control and quit row
+                HStack(spacing: 6) {
                     // Service control button
                     if containerMonitor.status == .running {
                         if showStopConfirmation {
-                            HStack(spacing: 4) {
-                                Button("Confirm Stop", role: .destructive) {
-                                    showStopConfirmation = false
-                                    containerMonitor.stopContainerService()
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .tint(.red)
-                                .controlSize(.small)
-                                .disabled(containerMonitor.isOperating)
-                                
-                                Button("Cancel") {
-                                    showStopConfirmation = false
-                                }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
+                            Button("Confirm Stop", role: .destructive) {
+                                showStopConfirmation = false
+                                containerMonitor.stopContainerService()
                             }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.red)
+                            .controlSize(.small)
+                            .disabled(containerMonitor.isOperating)
+                            
+                            Button("Cancel") {
+                                showStopConfirmation = false
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                         } else {
                             Button("Stop Service") {
                                 showStopConfirmation = true
                             }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                             .disabled(containerMonitor.isOperating)
+                            
+                            Spacer()
                         }
                     } else if containerMonitor.status == .stopped {
                         Button("Start Service") {
                             containerMonitor.startContainerService()
                         }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
                         .disabled(containerMonitor.isOperating)
+                        
+                        Spacer()
+                    } else {
+                        Spacer()
                     }
                     
                     Button("Quit") {
                         NSApplication.shared.terminate(nil)
                     }
                     .keyboardShortcut("q", modifiers: .command)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
             }
             .padding()
@@ -293,7 +310,8 @@ struct ContentView: View {
     // MARK: - Actions
     
     private func openDesktopWindow() {
-        NotificationCenter.default.post(name: .openDesktopWindow, object: nil)
+        openWindow(id: "desktop-window")
+        NSApp.activate(ignoringOtherApps: true)
     }
 }
 

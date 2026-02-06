@@ -627,7 +627,7 @@ extension ContainerSystemMonitor {
     
     /// Get network connections (containers connected to network)
     func getNetworkConnections(_ networkName: String) async -> NetworkConnectionInfo? {
-        guard let networkDetails = await inspectNetwork(networkName) else {
+        guard await inspectNetwork(networkName) != nil else {
             return nil
         }
         
