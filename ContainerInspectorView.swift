@@ -10,6 +10,8 @@ import SwiftUI
 struct ContainerInspectorView: View {
     @Binding var container: ContainerInfo?
     @EnvironmentObject var containerMonitor: ContainerSystemMonitor
+    @State private var containerDetails: ContainerDetails?
+    @State private var isLoadingDetails = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -20,6 +22,12 @@ struct ContainerInspectorView: View {
             }
         }
         .background(Color(nsColor: .controlBackgroundColor))
+        .onChange(of: container?.name) { _, newName in
+            loadContainerDetails(for: newName)
+        }
+        .onAppear {
+            loadContainerDetails(for: container?.name)
+        }
     }
     
     // MARK: - Container Inspector
@@ -147,6 +155,68 @@ struct ContainerInspectorView: View {
                     }
                 }
                 
+                // Environment Variables
+                if let details = containerDetails, !details.environmentVariables.isEmpty {
+                    InspectorSection(title: "Environment Variables") {
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(Array(details.environmentVariables.sorted(by: { $0.key < $1.key })), id: \.key) { key, value in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(key)
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.primary)
+                                    Text(value)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .textSelection(.enabled)
+                                        .lineLimit(3)
+                                }
+                                
+                                if key != details.environmentVariables.sorted(by: { $0.key < $1.key }).last?.key {
+                                    Divider()
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Labels & Metadata
+                if let details = containerDetails, !details.labels.isEmpty {
+                    InspectorSection(title: "Labels") {
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(Array(details.labels.sorted(by: { $0.key < $1.key })), id: \.key) { key, value in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(key)
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.primary)
+                                    Text(value)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .textSelection(.enabled)
+                                        .lineLimit(3)
+                                }
+                                
+                                if key != details.labels.sorted(by: { $0.key < $1.key }).last?.key {
+                                    Divider()
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Command & Working Directory
+                if let details = containerDetails {
+                    InspectorSection(title: "Process Info") {
+                        if let command = details.command {
+                            InspectorRow(label: "Command", value: command, copyable: true)
+                        }
+                        if let workingDir = details.workingDir {
+                            InspectorRow(label: "Work Dir", value: workingDir, copyable: true)
+                        }
+                    }
+                }
+                
                 Spacer()
             }
             .padding()
@@ -172,6 +242,27 @@ struct ContainerInspectorView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+    }
+    
+    // MARK: - Container Details Loading
+    
+    private func loadContainerDetails(for containerName: String?) {
+        guard let containerName = containerName else {
+            containerDetails = nil
+            isLoadingDetails = false
+            return
+        }
+        
+        isLoadingDetails = true
+        
+        Task {
+            let details = await containerMonitor.inspectContainer(containerName)
+            
+            await MainActor.run {
+                self.containerDetails = details
+                self.isLoadingDetails = false
+            }
+        }
     }
     
     // MARK: - Stats Helpers

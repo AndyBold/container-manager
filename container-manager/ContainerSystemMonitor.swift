@@ -748,6 +748,120 @@ class ContainerSystemMonitor: ObservableObject {
         return true
     }
     
+    // MARK: - Container Inspection
+    
+    func inspectContainer(_ containerName: String) async -> ContainerDetails? {
+        guard let containerPath = containerPath else { return nil }
+        
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: containerPath)
+        process.arguments = ["inspect", containerName]
+        
+        // Set up environment
+        var environment = ProcessInfo.processInfo.environment
+        if let existingPath = environment["PATH"] {
+            environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:\(existingPath)"
+        } else {
+            environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+        }
+        process.environment = environment
+        
+        let outputPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = Pipe()
+        
+        do {
+            try process.run()
+            process.waitUntilExit()
+            
+            guard process.terminationStatus == 0 else {
+                return nil
+            }
+            
+            let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+            guard let output = String(data: data, encoding: .utf8) else { return nil }
+            
+            return parseInspectOutput(output, containerName: containerName)
+        } catch {
+            return nil
+        }
+    }
+    
+    private func parseInspectOutput(_ output: String, containerName: String) -> ContainerDetails? {
+        // Simple parsing of key-value pairs from inspect output
+        // This is a basic implementation that looks for common patterns
+        var env: [String: String] = [:]
+        var labels: [String: String] = [:]
+        var command: String?
+        var workingDir: String?
+        
+        let lines = output.components(separatedBy: .newlines)
+        var inEnvSection = false
+        var inLabelsSection = false
+        
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            
+            // Detect sections
+            if trimmed.contains("Environment:") || trimmed.contains("Env:") {
+                inEnvSection = true
+                inLabelsSection = false
+                continue
+            } else if trimmed.contains("Labels:") {
+                inLabelsSection = true
+                inEnvSection = false
+                continue
+            } else if trimmed.contains("Cmd:") || trimmed.contains("Command:") {
+                inEnvSection = false
+                inLabelsSection = false
+                // Try to extract command
+                if let match = trimmed.split(separator: ":").dropFirst().first {
+                    command = String(match).trimmingCharacters(in: .whitespaces)
+                }
+                continue
+            } else if trimmed.contains("WorkingDir:") {
+                inEnvSection = false
+                inLabelsSection = false
+                if let match = trimmed.split(separator: ":").dropFirst().first {
+                    workingDir = String(match).trimmingCharacters(in: .whitespaces)
+                }
+                continue
+            }
+            
+            // Parse environment variables
+            if inEnvSection && trimmed.contains("=") {
+                let parts = trimmed.components(separatedBy: "=")
+                if parts.count >= 2 {
+                    let key = parts[0].trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+                    let value = parts.dropFirst().joined(separator: "=").trimmingCharacters(in: .whitespaces)
+                    if !key.isEmpty {
+                        env[key] = value
+                    }
+                }
+            }
+            
+            // Parse labels
+            if inLabelsSection && trimmed.contains("=") {
+                let parts = trimmed.components(separatedBy: "=")
+                if parts.count >= 2 {
+                    let key = parts[0].trimmingCharacters(in: CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-")).inverted)
+                    let value = parts.dropFirst().joined(separator: "=").trimmingCharacters(in: .whitespaces)
+                    if !key.isEmpty {
+                        labels[key] = value
+                    }
+                }
+            }
+        }
+        
+        return ContainerDetails(
+            name: containerName,
+            environmentVariables: env,
+            labels: labels,
+            command: command,
+            workingDir: workingDir
+        )
+    }
+    
     deinit {
         timer?.invalidate()
     }
@@ -785,6 +899,24 @@ struct ContainerInfo: Identifiable, Equatable, Hashable {
         hasher.combine(image)
         hasher.combine(ports)
         hasher.combine(created)
+    }
+}
+
+// MARK: - Detailed Container Info
+
+struct ContainerDetails {
+    let name: String
+    let environmentVariables: [String: String]
+    let labels: [String: String]
+    let command: String?
+    let workingDir: String?
+    
+    init(name: String, environmentVariables: [String: String] = [:], labels: [String: String] = [:], command: String? = nil, workingDir: String? = nil) {
+        self.name = name
+        self.environmentVariables = environmentVariables
+        self.labels = labels
+        self.command = command
+        self.workingDir = workingDir
     }
 }
 // MARK: - Stats Collection Extension
