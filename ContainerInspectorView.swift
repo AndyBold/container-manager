@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContainerInspectorView: View {
     @Binding var container: ContainerInfo?
+    @EnvironmentObject var containerMonitor: ContainerSystemMonitor
     
     var body: some View {
         VStack(spacing: 0) {
@@ -86,30 +87,63 @@ struct ContainerInspectorView: View {
                     }
                 }
                 
-                // Resource Usage (placeholder)
+                // Resource Usage (live stats)
                 InspectorSection(title: "Resource Usage") {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("CPU")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text("-")
-                                .font(.title3)
-                                .fontWeight(.semibold)
+                    VStack(spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("CPU")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(cpuValue(for: container.name))
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.green)
+                            }
+                            
+                            Spacer()
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Memory")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(memoryValue(for: container.name))
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.orange)
+                            }
+                            
+                            Spacer()
                         }
                         
-                        Spacer()
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Memory")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text("-")
-                                .font(.title3)
-                                .fontWeight(.semibold)
+                        // Network stats
+                        if let stats = containerMonitor.statsCollector?.containerStats[container.name]?.latestSnapshot() {
+                            Divider()
+                            
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Network RX")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(String(format: "%.2f MB", stats.networkRxMB))
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                }
+                                
+                                Spacer()
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Network TX")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(String(format: "%.2f MB", stats.networkTxMB))
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                }
+                                
+                                Spacer()
+                            }
                         }
-                        
-                        Spacer()
                     }
                 }
                 
@@ -138,6 +172,24 @@ struct ContainerInspectorView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+    }
+    
+    // MARK: - Stats Helpers
+    
+    private func cpuValue(for containerName: String) -> String {
+        guard let history = containerMonitor.statsCollector?.containerStats[containerName],
+              let latest = history.latestSnapshot() else {
+            return "-"
+        }
+        return String(format: "%.1f%%", latest.cpuPercent)
+    }
+    
+    private func memoryValue(for containerName: String) -> String {
+        guard let history = containerMonitor.statsCollector?.containerStats[containerName],
+              let latest = history.latestSnapshot() else {
+            return "-"
+        }
+        return String(format: "%.0f MB", latest.memoryUsageMB)
     }
 }
 

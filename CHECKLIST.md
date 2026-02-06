@@ -105,7 +105,7 @@ Use this checklist to track your progress implementing the desktop application f
 - [x] Subnet/IP validation
 - [x] 35+ comprehensive tests
 
-## Phase 5: Statistics & Monitoring (In Progress - 40% Complete)
+## Phase 5: Statistics & Monitoring (In Progress - 60% Complete)
 
 ### Data Collection ✅
 - [x] Create `ContainerStats.swift` model (integrated into ContainerSystemMonitor)
@@ -132,11 +132,11 @@ Use this checklist to track your progress implementing the desktop application f
 - [ ] Add chart interactions (zoom, pan)
 - [ ] Export stats data
 
-### Inspector Panel Enhancements
-- [ ] Add real resource usage to `ContainerInspectorView`
-- [ ] Live CPU percentage
-- [ ] Live memory usage
-- [ ] Network stats
+### Inspector Panel Enhancements (Partial)
+- [x] Add real resource usage to `ContainerInspectorView`
+- [x] Live CPU percentage
+- [x] Live memory usage
+- [x] Network stats (RX/TX totals)
 - [ ] Disk usage
 - [ ] Process list (if available)
 - [ ] Environment variables
