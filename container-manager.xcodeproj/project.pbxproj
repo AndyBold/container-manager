@@ -117,8 +117,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				ContainerSystemMonitor.swift,
-				VolumeListView.swift,
-				VolumeManagement.swift,
 			);
 			target = 125A838B2F04467C009B75F9 /* container-managerTests */;
 		};
@@ -613,6 +611,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "andybold.container-manager";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -646,6 +645,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "andybold.container-manager";
 				PRODUCT_NAME = "$(TARGET_NAME)";
