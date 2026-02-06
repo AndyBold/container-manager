@@ -318,9 +318,23 @@ class ContainerSystemMonitor: ObservableObject {
     @Published var statsCollector: StatsCollector?
     
     private var timer: Timer?
+    private var settingsObserver: AnyCancellable?
     var containerPath: String?
     
+    // Track previous CPU measurements for percentage calculation (thread-safe)
+    private let cpuMeasurementLock = NSLock()
+    nonisolated(unsafe) private var previousCPUMeasurements: [String: (usec: UInt64, timestamp: Date)] = [:]
+    
+    private var refreshInterval: Double {
+        UserDefaults.standard.double(forKey: "refreshInterval")
+    }
+    
     init() {
+        // Set default refresh interval if not set
+        if UserDefaults.standard.object(forKey: "refreshInterval") == nil {
+            UserDefaults.standard.set(10.0, forKey: "refreshInterval")
+        }
+        
         // Initialize stats collector
         let collector = StatsCollector()
         collector.statsCollectionHandler = { [weak self] in
@@ -330,6 +344,12 @@ class ContainerSystemMonitor: ObservableObject {
         
         findContainerPath()
         startMonitoring()
+        
+        // Observe UserDefaults changes for refresh interval
+        settingsObserver = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            .sink { [weak self] _ in
+                self?.recreateTimer(interval: self?.refreshInterval ?? 10.0)
+            }
     }
     
     private func findContainerPath() {
@@ -353,8 +373,19 @@ class ContainerSystemMonitor: ObservableObject {
         // Initial check
         checkContainerStatus()
         
-        // Set up periodic monitoring (every 10 seconds)
-        timer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
+        // Set up periodic monitoring using the refresh interval setting
+        recreateTimer(interval: refreshInterval)
+    }
+    
+    private func recreateTimer(interval: TimeInterval) {
+        // Clamp interval to valid range (2-300 seconds)
+        let validInterval = max(2.0, min(300.0, interval))
+        
+        // Invalidate existing timer
+        timer?.invalidate()
+        
+        // Create new timer with updated interval
+        timer = Timer.scheduledTimer(withTimeInterval: validInterval, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             // Skip polling if user is performing an action
             if !self.isOperating {
@@ -415,10 +446,16 @@ class ContainerSystemMonitor: ObservableObject {
                 let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
                 if let output = String(data: data, encoding: .utf8) {
                     await MainActor.run {
+                        // Capture previous container states
+                        let previousContainers = self.containers
+                        
                         self.parseContainerOutput(output)
                         let wasRunning = self.status == .running
                         self.status = .running
                         self.lastUpdated = Date()
+                        
+                        // Detect and notify container state changes
+                        self.detectAndNotifyChanges(previous: previousContainers, current: self.containers)
                         
                         // Start stats collection if not already running
                         if !wasRunning, let statsCollector = self.statsCollector {
@@ -604,8 +641,16 @@ class ContainerSystemMonitor: ObservableObject {
             
             // Check status again
             await checkAppleContainerStatus()
+            
+            // Send notification on success
+            if command == "start" {
+                NotificationManager.shared.serviceStarted()
+            } else if command == "stop" {
+                NotificationManager.shared.serviceStopped()
+            }
         } catch {
-            // Silently handle errors
+            // Send error notification
+            NotificationManager.shared.serviceError("Failed to \(command) service: \(error.localizedDescription)")
         }
         
         await MainActor.run {
@@ -726,6 +771,36 @@ class ContainerSystemMonitor: ObservableObject {
         // This prevents unnecessary UI redraws that could close dialogs
         if !containersAreEqual(containers, newContainers) {
             containers = newContainers
+        }
+    }
+    
+    // Detect container state changes and send notifications
+    private func detectAndNotifyChanges(previous: [ContainerInfo], current: [ContainerInfo]) {
+        // Build lookup dictionaries for quick access
+        let prevDict = Dictionary(uniqueKeysWithValues: previous.map { ($0.name, $0.status) })
+        let currDict = Dictionary(uniqueKeysWithValues: current.map { ($0.name, $0.status) })
+        
+        // Check for state changes in existing containers
+        for (name, currentStatus) in currDict {
+            if let previousStatus = prevDict[name] {
+                // Container existed before - check if status changed
+                if previousStatus != currentStatus {
+                    let wasRunning = previousStatus.lowercased().contains("running") || previousStatus.lowercased().contains("up")
+                    let isRunning = currentStatus.lowercased().contains("running") || currentStatus.lowercased().contains("up")
+                    
+                    if !wasRunning && isRunning {
+                        NotificationManager.shared.containerStarted(name)
+                    } else if wasRunning && !isRunning {
+                        NotificationManager.shared.containerStopped(name)
+                    }
+                }
+            } else {
+                // New container appeared
+                let isRunning = currentStatus.lowercased().contains("running") || currentStatus.lowercased().contains("up")
+                if isRunning {
+                    NotificationManager.shared.containerStarted(name)
+                }
+            }
         }
     }
     
@@ -953,18 +1028,221 @@ extension ContainerSystemMonitor {
         let timestamp = Date()
         
         // Try to collect stats using various methods
-        // Method 1: Try docker/podman stats command if available
+        // Method 1: Try Apple container tool stats command
+        if let stats = await collectStatsFromContainerTool(containerName: containerName, timestamp: timestamp) {
+            return stats
+        }
+        
+        // Method 2: Try docker/podman stats command if available
         if let stats = await collectStatsFromDockerCommand(containerName: containerName, timestamp: timestamp) {
             return stats
         }
         
-        // Method 2: Try using container exec with ps command (fallback)
+        // Method 3: Try using container exec with ps command (fallback)
         if let stats = await collectStatsFromExec(containerName: containerName, timestamp: timestamp) {
             return stats
         }
         
         // If all methods fail, return nil
         return nil
+    }
+    
+    /// Try to collect stats using Apple container tool stats command
+    private func collectStatsFromContainerTool(containerName: String, timestamp: Date) async -> ContainerStatsSnapshot? {
+        guard let containerPath = containerPath else { return nil }
+        
+        // Run process on background queue to avoid blocking
+        return await withCheckedContinuation { continuation in
+            Task.detached {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: containerPath)
+                process.arguments = ["stats", "--no-stream", "--format", "json", containerName]
+                
+                // Set up environment with PATH
+                var environment = ProcessInfo.processInfo.environment
+                if let existingPath = environment["PATH"] {
+                    environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:\(existingPath)"
+                } else {
+                    environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+                }
+                process.environment = environment
+                
+                let outputPipe = Pipe()
+                process.standardOutput = outputPipe
+                process.standardError = Pipe()
+                
+                do {
+                    try process.run()
+                    process.waitUntilExit()
+                    
+                    guard process.terminationStatus == 0 else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+                    
+                    let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+                    guard let output = String(data: data, encoding: .utf8) else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+                    
+                    let result = await self.parseContainerToolStatsOutput(output, containerName: containerName, timestamp: timestamp)
+                    continuation.resume(returning: result)
+                } catch {
+                    continuation.resume(returning: nil)
+                }
+            }
+        }
+    }
+    
+    /// Parse Apple container tool stats JSON output
+    nonisolated private func parseContainerToolStatsOutput(_ output: String, containerName: String, timestamp: Date) -> ContainerStatsSnapshot? {
+        guard let data = output.data(using: .utf8) else { return nil }
+        
+        do {
+            // The container tool may return an array of stats or a single object
+            if let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                // Find the stats for our container
+                for json in jsonArray {
+                    // Check both "id" and "name" fields
+                    let id = json["id"] as? String
+                    let name = json["name"] as? String
+                    if (id == containerName || id?.hasPrefix(containerName) == true) ||
+                       (name == containerName || name?.hasPrefix(containerName) == true) {
+                        return parseContainerStatsJSON(json, containerName: containerName, timestamp: timestamp)
+                    }
+                }
+            } else if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                return parseContainerStatsJSON(json, containerName: containerName, timestamp: timestamp)
+            }
+        } catch {
+            return nil
+        }
+        
+        return nil
+    }
+    
+    /// Parse stats JSON object
+    nonisolated private func parseContainerStatsJSON(_ json: [String: Any], containerName: String, timestamp: Date) -> ContainerStatsSnapshot? {
+        // Extract CPU percentage
+        // Apple container tool provides cpuUsageUsec (microseconds of CPU time used)
+        let cpuPercent: Double
+        if let cpuUsageUsec = json["cpuUsageUsec"] as? UInt64 {
+            // Calculate CPU percentage based on time delta (thread-safe)
+            cpuMeasurementLock.lock()
+            defer { cpuMeasurementLock.unlock() }
+            
+            if let previous = previousCPUMeasurements[containerName] {
+                let timeDelta = timestamp.timeIntervalSince(previous.timestamp)
+                if timeDelta > 0 {
+                    let cpuDelta = Double(cpuUsageUsec) - Double(previous.usec)
+                    // Convert microseconds to seconds and calculate percentage
+                    // CPU % = (cpu_delta_seconds / time_delta_seconds) * 100
+                    cpuPercent = (cpuDelta / 1_000_000.0) / timeDelta * 100.0
+                    // Store current measurement for next calculation
+                    previousCPUMeasurements[containerName] = (cpuUsageUsec, timestamp)
+                } else {
+                    cpuPercent = 0
+                }
+            } else {
+                // Store current measurement for next calculation
+                previousCPUMeasurements[containerName] = (cpuUsageUsec, timestamp)
+                cpuPercent = 0
+            }
+        } else if let cpuPerc = json["cpu_percent"] as? Double {
+            cpuPercent = cpuPerc
+        } else if let cpuPerc = json["CPUPerc"] as? String {
+            cpuPercent = parseCPUPercent(cpuPerc)
+        } else {
+            cpuPercent = 0
+        }
+        
+        // Extract memory usage
+        var memoryUsageBytes: UInt64 = 0
+        var memoryLimitBytes: UInt64 = 0
+        
+        if let memUsage = json["memoryUsageBytes"] as? UInt64 {
+            memoryUsageBytes = memUsage
+        } else if let memUsage = json["mem_usage"] as? UInt64 {
+            memoryUsageBytes = memUsage
+        }
+        
+        if let memLimit = json["memoryLimitBytes"] as? UInt64 {
+            memoryLimitBytes = memLimit
+        } else if let memLimit = json["mem_limit"] as? UInt64 {
+            memoryLimitBytes = memLimit
+        }
+        
+        // Fallback to string parsing if numeric values not found
+        if memoryUsageBytes == 0 && memoryLimitBytes == 0 {
+            if let memUsageStr = json["MemUsage"] as? String {
+                let memValues = parseMemoryValue(memUsageStr)
+                memoryUsageBytes = memValues.usage
+                memoryLimitBytes = memValues.limit
+            }
+        }
+        
+        // Extract network I/O
+        var networkRxBytes: UInt64 = 0
+        var networkTxBytes: UInt64 = 0
+        
+        if let netRx = json["networkRxBytes"] as? UInt64 {
+            networkRxBytes = netRx
+        } else if let netRx = json["net_rx"] as? UInt64 {
+            networkRxBytes = netRx
+        }
+        
+        if let netTx = json["networkTxBytes"] as? UInt64 {
+            networkTxBytes = netTx
+        } else if let netTx = json["net_tx"] as? UInt64 {
+            networkTxBytes = netTx
+        }
+        
+        // Fallback to string parsing
+        if networkRxBytes == 0 && networkTxBytes == 0 {
+            if let netIO = json["NetIO"] as? String {
+                let netValues = parseNetworkIO(netIO)
+                networkRxBytes = netValues.rx
+                networkTxBytes = netValues.tx
+            }
+        }
+        
+        // Extract block I/O
+        var blockReadBytes: UInt64 = 0
+        var blockWriteBytes: UInt64 = 0
+        
+        if let blockRead = json["blockReadBytes"] as? UInt64 {
+            blockReadBytes = blockRead
+        } else if let blockRead = json["block_read"] as? UInt64 {
+            blockReadBytes = blockRead
+        }
+        
+        if let blockWrite = json["blockWriteBytes"] as? UInt64 {
+            blockWriteBytes = blockWrite
+        } else if let blockWrite = json["block_write"] as? UInt64 {
+            blockWriteBytes = blockWrite
+        }
+        
+        // Fallback to string parsing
+        if blockReadBytes == 0 && blockWriteBytes == 0 {
+            if let blockIO = json["BlockIO"] as? String {
+                let blockValues = parseBlockIO(blockIO)
+                blockReadBytes = blockValues.read
+                blockWriteBytes = blockValues.write
+            }
+        }
+        
+        return ContainerStatsSnapshot(
+            timestamp: timestamp,
+            containerName: containerName,
+            cpuPercent: cpuPercent,
+            memoryUsageBytes: memoryUsageBytes,
+            memoryLimitBytes: memoryLimitBytes,
+            networkRxBytes: networkRxBytes,
+            networkTxBytes: networkTxBytes,
+            blockReadBytes: blockReadBytes,
+            blockWriteBytes: blockWriteBytes
+        )
     }
     
     /// Try to collect stats using docker/podman stats command
@@ -988,40 +1266,45 @@ extension ContainerSystemMonitor {
     
     /// Execute stats command
     private func executeStatsCommand(path: String, containerName: String) async -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: path)
-        process.arguments = ["stats", "--no-stream", "--format", "{{json .}}", containerName]
-        
-        // Set up environment with PATH
-        var environment = ProcessInfo.processInfo.environment
-        if let existingPath = environment["PATH"] {
-            environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:\(existingPath)"
-        } else {
-            environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
-        }
-        process.environment = environment
-        
-        let outputPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = Pipe()
-        
-        do {
-            try process.run()
-            process.waitUntilExit()
-            
-            guard process.terminationStatus == 0 else {
-                return nil
+        return await withCheckedContinuation { continuation in
+            Task.detached {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: path)
+                process.arguments = ["stats", "--no-stream", "--format", "{{json .}}", containerName]
+                
+                // Set up environment with PATH
+                var environment = ProcessInfo.processInfo.environment
+                if let existingPath = environment["PATH"] {
+                    environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:\(existingPath)"
+                } else {
+                    environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+                }
+                process.environment = environment
+                
+                let outputPipe = Pipe()
+                process.standardOutput = outputPipe
+                process.standardError = Pipe()
+                
+                do {
+                    try process.run()
+                    process.waitUntilExit()
+                    
+                    guard process.terminationStatus == 0 else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+                    
+                    let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+                    continuation.resume(returning: String(data: data, encoding: .utf8))
+                } catch {
+                    continuation.resume(returning: nil)
+                }
             }
-            
-            let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            return String(data: data, encoding: .utf8)
-        } catch {
-            return nil
         }
     }
     
     /// Parse docker/podman stats JSON output
-    private func parseDockerStatsOutput(_ output: String, containerName: String, timestamp: Date) -> ContainerStatsSnapshot? {
+    nonisolated private func parseDockerStatsOutput(_ output: String, containerName: String, timestamp: Date) -> ContainerStatsSnapshot? {
         guard let data = output.data(using: .utf8) else { return nil }
         
         do {
@@ -1056,42 +1339,51 @@ extension ContainerSystemMonitor {
         // Use ps command to get basic CPU and memory info
         guard let containerPath = containerPath else { return nil }
         
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: containerPath)
-        process.arguments = ["exec", containerName, "ps", "aux"]
-        
-        // Set up environment
-        var environment = ProcessInfo.processInfo.environment
-        if let existingPath = environment["PATH"] {
-            environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:\(existingPath)"
-        } else {
-            environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
-        }
-        process.environment = environment
-        
-        let outputPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = Pipe()
-        
-        do {
-            try process.run()
-            process.waitUntilExit()
-            
-            guard process.terminationStatus == 0 else {
-                return nil
+        return await withCheckedContinuation { continuation in
+            Task.detached {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: containerPath)
+                process.arguments = ["exec", containerName, "ps", "aux"]
+                
+                // Set up environment
+                var environment = ProcessInfo.processInfo.environment
+                if let existingPath = environment["PATH"] {
+                    environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:\(existingPath)"
+                } else {
+                    environment["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+                }
+                process.environment = environment
+                
+                let outputPipe = Pipe()
+                process.standardOutput = outputPipe
+                process.standardError = Pipe()
+                
+                do {
+                    try process.run()
+                    process.waitUntilExit()
+                    
+                    guard process.terminationStatus == 0 else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+                    
+                    let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+                    guard let output = String(data: data, encoding: .utf8) else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+                    
+                    let result = self.parsePsOutput(output, containerName: containerName, timestamp: timestamp)
+                    continuation.resume(returning: result)
+                } catch {
+                    continuation.resume(returning: nil)
+                }
             }
-            
-            let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            guard let output = String(data: data, encoding: .utf8) else { return nil }
-            
-            return parsePsOutput(output, containerName: containerName, timestamp: timestamp)
-        } catch {
-            return nil
         }
     }
     
     /// Parse ps aux output
-    private func parsePsOutput(_ output: String, containerName: String, timestamp: Date) -> ContainerStatsSnapshot? {
+    nonisolated private func parsePsOutput(_ output: String, containerName: String, timestamp: Date) -> ContainerStatsSnapshot? {
         let lines = output.components(separatedBy: .newlines).filter { !$0.isEmpty }
         guard lines.count > 1 else { return nil }
         
@@ -1131,7 +1423,7 @@ extension ContainerSystemMonitor {
     
     // MARK: - Helper Methods
     
-    private func findCommandPath(_ command: String) -> String? {
+    nonisolated private func findCommandPath(_ command: String) -> String? {
         let paths = [
             "/opt/homebrew/bin/\(command)",
             "/usr/local/bin/\(command)",
@@ -1147,12 +1439,12 @@ extension ContainerSystemMonitor {
         return nil
     }
     
-    private func parseCPUPercent(_ value: String) -> Double {
+    nonisolated private func parseCPUPercent(_ value: String) -> Double {
         let cleanValue = value.replacingOccurrences(of: "%", with: "")
         return Double(cleanValue) ?? 0
     }
     
-    private func parseMemoryValue(_ value: String) -> (usage: UInt64, limit: UInt64) {
+    nonisolated private func parseMemoryValue(_ value: String) -> (usage: UInt64, limit: UInt64) {
         // Format: "123.4MiB / 4GiB"
         let components = value.components(separatedBy: " / ")
         guard components.count == 2 else { return (0, 0) }
@@ -1163,7 +1455,7 @@ extension ContainerSystemMonitor {
         return (usage, limit)
     }
     
-    private func parseNetworkIO(_ value: String) -> (rx: UInt64, tx: UInt64) {
+    nonisolated private func parseNetworkIO(_ value: String) -> (rx: UInt64, tx: UInt64) {
         // Format: "1.2kB / 3.4kB"
         let components = value.components(separatedBy: " / ")
         guard components.count == 2 else { return (0, 0) }
@@ -1174,7 +1466,7 @@ extension ContainerSystemMonitor {
         return (rx, tx)
     }
     
-    private func parseBlockIO(_ value: String) -> (read: UInt64, write: UInt64) {
+    nonisolated private func parseBlockIO(_ value: String) -> (read: UInt64, write: UInt64) {
         // Format: "1.2kB / 3.4kB"
         let components = value.components(separatedBy: " / ")
         guard components.count == 2 else { return (0, 0) }
@@ -1185,7 +1477,7 @@ extension ContainerSystemMonitor {
         return (read, write)
     }
     
-    private func parseBytes(_ value: String) -> UInt64 {
+    nonisolated private func parseBytes(_ value: String) -> UInt64 {
         let cleanValue = value.trimmingCharacters(in: .whitespaces)
         let numberPart = cleanValue.prefix(while: { $0.isNumber || $0 == "." })
         let unitPart = cleanValue.suffix(from: numberPart.endIndex)

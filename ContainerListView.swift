@@ -11,6 +11,9 @@ struct ContainerListView: View {
     @EnvironmentObject var containerMonitor: ContainerSystemMonitor
     let searchText: String
     
+    @AppStorage("defaultViewMode") private var defaultViewMode = "list"
+    @AppStorage("showInspectorPanel") private var defaultShowInspector = true
+    
     @State private var selectedContainerID: ContainerInfo.ID?
     @State private var viewMode: ViewMode = .list
     @State private var filterStatus: FilterStatus = .all
@@ -195,6 +198,19 @@ struct ContainerListView: View {
                 ContainerInspectorView(container: .constant(selectedContainer))
                     .frame(width: 300)
             }
+        }
+        .onAppear {
+            // Initialize state from settings
+            viewMode = ViewMode(rawValue: defaultViewMode) ?? .list
+            showInspector = defaultShowInspector
+        }
+        .onChange(of: viewMode) { _, newValue in
+            // Persist view mode changes
+            defaultViewMode = newValue.rawValue
+        }
+        .onChange(of: showInspector) { _, newValue in
+            // Persist inspector visibility changes
+            defaultShowInspector = newValue
         }
     }
     
