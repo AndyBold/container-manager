@@ -44,7 +44,7 @@ class ContainerSystemMonitor: ObservableObject {
     @Published var isOperating: Bool = false // Track if start/stop operation is in progress
     
     private var timer: Timer?
-    private var containerPath: String?
+    var containerPath: String?
     
     init() {
         findContainerPath()
@@ -91,7 +91,7 @@ class ContainerSystemMonitor: ObservableObject {
         }
     }
     
-    private func checkAppleContainerStatus() async {
+    func checkAppleContainerStatus() async {
         guard let containerPath else {
             await MainActor.run {
                 status = .stopped
@@ -448,7 +448,7 @@ class ContainerSystemMonitor: ObservableObject {
     }
 }
 
-struct ContainerInfo: Identifiable, Equatable {
+struct ContainerInfo: Identifiable, Equatable, Hashable {
     let id = UUID()
     let name: String
     let status: String
@@ -471,5 +471,14 @@ struct ContainerInfo: Identifiable, Equatable {
                lhs.image == rhs.image &&
                lhs.ports == rhs.ports &&
                lhs.created == rhs.created
+    }
+    
+    // Custom hash function that matches the equality implementation
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
+        hasher.combine(status)
+        hasher.combine(image)
+        hasher.combine(ports)
+        hasher.combine(created)
     }
 }

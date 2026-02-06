@@ -1,6 +1,8 @@
 # Container Manager for macOS 📦
 
-A native macOS menu bar application for monitoring and managing containers. Built with SwiftUI for a clean, native macOS experience.
+A native macOS application for monitoring and managing containers. Built with SwiftUI for a clean, native macOS experience.
+
+**Now featuring a full desktop application!** Use it as a lightweight menu bar app or open the comprehensive desktop interface for advanced management.
 
 ![macOS](https://img.shields.io/badge/macOS-14.0+-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9+-orange)
@@ -34,6 +36,25 @@ A native macOS menu bar application for monitoring and managing containers. Buil
 
 ## ✨ Features
 
+### 🎯 Two Modes of Operation
+
+**Menu Bar Mode** (Lightweight)
+- Lives in your menu bar for quick access
+- Status monitoring at a glance
+- Basic container operations
+- Hidden from Dock and App Switcher
+
+**Desktop App Mode** (Comprehensive)
+- Full-featured management interface
+- Multi-section sidebar navigation (Containers, Images, Volumes, Networks)
+- Real-time statistics dashboard
+- Advanced filtering and search
+- List and grid view modes
+- Detailed inspector panel
+- Settings and preferences
+
+Press `⌘M` to switch between modes!
+
 ### 🎯 Core Functionality
 - **Menu Bar App** - Lives in your menu bar, hidden from Dock and App Switcher
 - **Container Monitoring** - Real-time monitoring of all containers (running and stopped)
@@ -64,8 +85,11 @@ A native macOS menu bar application for monitoring and managing containers. Buil
 - **Remove** - Delete containers (with confirmation)
 
 ### ⌨️ Keyboard Shortcuts
+- **⌘M** - Open Manager Window (Desktop App)
 - **⌘R** - Refresh container list
 - **⌘⇧S** - Start/Stop container service
+- **⌘,** - Settings
+- **⌘F** - Search (in Desktop App)
 - **⌘Q** - Quit application
 
 ## 🚀 Getting Started
@@ -128,20 +152,48 @@ The app shows helpful messages when:
 
 ## 🔧 Technical Architecture
 
+### Application Modes
+
+The app uses SwiftUI's scene system to provide two interfaces:
+
+**MenuBarExtra Scene:**
+- Always visible in menu bar
+- Lightweight popup interface
+- Quick status monitoring
+
+**Window Scene:**
+- Full desktop application
+- Opens on-demand via `⌘M`
+- Multi-section navigation
+
+Both modes share a single `ContainerSystemMonitor` instance for synchronized state.
+
 ### Components
 
 #### `container_managerApp.swift`
-- Main app entry point
-- Menu bar configuration
-- App delegate for hiding from Dock/Switcher
+- Main app entry point with dual scenes
+- Menu bar and window configuration
+- App delegate for Dock/menu bar behavior
 - Global keyboard shortcuts
+- Window management
 
 #### `ContentView.swift`
-- Main UI layout
+- Menu bar popup UI
 - Container list display
 - Running/stopped container sections
 - Service control buttons
-- Container row expansion and actions
+- "Open Manager" button to launch desktop app
+
+#### Desktop App Views
+- **DesktopAppWindow.swift** - Main window with sidebar navigation
+- **ContainerListView.swift** - Enhanced list/grid views with inspector
+- **ContainerInspectorView.swift** - Detailed container information panel
+- **ContainerActions.swift** - Reusable action menus and context menus
+- **ImageListView.swift** - Image management interface
+- **VolumeListView.swift** - Volume management
+- **NetworkListView.swift** - Network management
+- **StatsView.swift** - Real-time statistics dashboard
+- **SettingsView.swift** - Application preferences
 
 #### `ContainerSystemMonitor.swift`
 - Container system monitoring
@@ -387,9 +439,18 @@ Operations try multiple command variations for compatibility:
 ```
 container-manager/
 ├── container_managerApp.swift          # App entry point
-├── ContentView.swift                   # Main UI
+├── ContentView.swift                   # Menu bar popup
 ├── ContainerSystemMonitor.swift        # Business logic
-├── Assets.xcassets/                    # Images and icons
+├── DesktopAppWindow.swift             # Main desktop window
+├── ContainerListView.swift            # Enhanced container list
+├── ContainerInspectorView.swift       # Inspector panel
+├── ContainerActions.swift             # Reusable actions
+├── ImageListView.swift                # Image management
+├── VolumeListView.swift               # Volume management
+├── NetworkListView.swift              # Network management
+├── StatsView.swift                    # Statistics dashboard
+├── SettingsView.swift                 # Preferences
+├── Assets.xcassets/                   # Images and icons
 └── Tests/
     ├── ContainerSystemMonitorTests.swift
     └── ContainerSystemMonitorValidation.swift
@@ -433,26 +494,39 @@ Button("My Action") {
 Contributions are welcome! Areas for improvement:
 
 ### High Priority
-- [ ] View container logs
-- [ ] Inspect container details
-- [ ] Filter/search containers
-- [ ] Docker compatibility layer
-- [ ] Podman support
+- [x] Full desktop application interface
+- [x] Enhanced container list with grid/list views
+- [x] Inspector panel for detailed information
+- [x] Statistics dashboard
+- [x] Settings and preferences
+- [ ] Container log viewer with live streaming
+- [ ] Terminal/exec integration
+- [ ] Image pull/push with progress
+- [ ] Docker/Podman compatibility layer
 
 ### Medium Priority
-- [ ] Container stats (CPU, memory)
+- [ ] Container creation wizard
+- [ ] Volume browser with file navigation
+- [ ] Network configuration UI
+- [ ] Compose file support
+- [ ] Multi-host support
 - [ ] Custom themes/colors
 - [ ] Notification support
 - [ ] Export container list
-- [ ] Keyboard navigation
 
 ### Nice to Have
-- [ ] Multi-container actions
 - [ ] Container groups/favorites
-- [ ] Image management
-- [ ] Volume management
-- [ ] Network inspection
-- [ ] Compose file support
+- [ ] Historical statistics
+- [ ] Advanced filtering rules
+- [ ] Custom actions/scripts
+- [ ] Cloud registry integration
+- [ ] Team collaboration features
+
+## 📚 Documentation
+
+- **[Desktop App Guide](DESKTOP_APP_GUIDE.md)** - Comprehensive guide to the desktop application
+- **[API Documentation](#)** - Code documentation (coming soon)
+- **[Contributing Guide](#)** - How to contribute (coming soon)
 
 ## 📝 License
 
@@ -471,21 +545,32 @@ Contributions are welcome! Areas for improvement:
 
 ## 🗺️ Roadmap
 
-### Version 1.1
-- [ ] Container logs viewer
-- [ ] Stats dashboard
-- [ ] Docker/Podman auto-detection
+### Version 2.0 (Current)
+- [x] Full desktop application
+- [x] Enhanced container list with grid view
+- [x] Inspector panel
+- [x] Statistics dashboard
+- [x] Settings interface
+- [x] Dual-mode operation (menu bar + desktop)
 
-### Version 1.2
-- [ ] Image management
+### Version 2.1
+- [ ] Container logs viewer with live streaming
+- [ ] Terminal/exec integration
+- [ ] Image pull/push interface
+- [ ] Container creation wizard
+
+### Version 2.2
 - [ ] Volume browser
-- [ ] Network inspector
+- [ ] Network configuration UI
+- [ ] Docker/Podman auto-detection
+- [ ] Historical statistics
 
-### Version 2.0
-- [ ] Multi-host support
-- [ ] Remote container management
+### Version 3.0
+- [ ] Compose file support
+- [ ] Multi-host/remote management
 - [ ] Advanced filtering
 - [ ] Custom actions/scripts
+- [ ] Cloud integration
 
 ---
 

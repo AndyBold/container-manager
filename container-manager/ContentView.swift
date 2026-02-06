@@ -227,6 +227,11 @@ struct ContentView: View {
                 }
                 
                 HStack {
+                    Button("Open Manager") {
+                        openDesktopWindow()
+                    }
+                    .keyboardShortcut("m", modifiers: .command)
+                    
                     Button("Refresh") {
                         containerMonitor.checkContainerStatus()
                     }
@@ -283,6 +288,12 @@ struct ContentView: View {
                 showStopConfirmation = false
             }
         }
+    }
+    
+    // MARK: - Actions
+    
+    private func openDesktopWindow() {
+        NotificationCenter.default.post(name: .openDesktopWindow, object: nil)
     }
 }
 

@@ -7,6 +7,49 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		123D67012F35053500530346 /* DesktopAppWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67002F35053500530346 /* DesktopAppWindow.swift */; };
+		123D67032F35056500530346 /* ContainerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67022F35056500530346 /* ContainerListView.swift */; };
+		123D67052F35057A00530346 /* ContainerActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67042F35057A00530346 /* ContainerActions.swift */; };
+		123D67072F35059000530346 /* ContainerInspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67062F35059000530346 /* ContainerInspectorView.swift */; };
+		123D67092F3505A300530346 /* ImageListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67082F3505A300530346 /* ImageListView.swift */; };
+		123D670B2F3505A300530346 /* VolumeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D670A2F3505A300530346 /* VolumeListView.swift */; };
+		123D670D2F3505A300530346 /* NetworkListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D670C2F3505A300530346 /* NetworkListView.swift */; };
+		123D670F2F3505C600530346 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D670E2F3505C600530346 /* StatsView.swift */; };
+		123D67112F3505C600530346 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67102F3505C600530346 /* SettingsView.swift */; };
+		123D67152F35068600530346 /* QUICKSTART.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D67142F35068600530346 /* QUICKSTART.md */; };
+		123D67172F3506BE00530346 /* IMPLEMENTATION_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D67162F3506BE00530346 /* IMPLEMENTATION_SUMMARY.md */; };
+		123D67192F35070100530346 /* ARCHITECTURE.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D67182F35070100530346 /* ARCHITECTURE.md */; };
+		123D671B2F35073C00530346 /* CHECKLIST.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D671A2F35073C00530346 /* CHECKLIST.md */; };
+		123D671D2F35EC5C00530346 /* ContainerLogsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D671C2F35EC5C00530346 /* ContainerLogsTests.swift */; };
+		123D671F2F35EC9500530346 /* ContainerTerminalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D671E2F35EC9500530346 /* ContainerTerminalTests.swift */; };
+		123D67212F35ECE000530346 /* ImageManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67202F35ECE000530346 /* ImageManagementTests.swift */; };
+		123D67232F35ED2100530346 /* TDD_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D67222F35ED2100530346 /* TDD_GUIDE.md */; };
+		123D67252F35ED6D00530346 /* TEST_REFERENCE.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D67242F35ED6D00530346 /* TEST_REFERENCE.md */; };
+		123D67272F35EDA300530346 /* PHASE3_TDD_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D67262F35EDA300530346 /* PHASE3_TDD_SUMMARY.md */; };
+		123D67292F35EE1800530346 /* ContainerLogs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67282F35EE1800530346 /* ContainerLogs.swift */; };
+		123D672B2F35EE3A00530346 /* ContainerLogsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D672A2F35EE3A00530346 /* ContainerLogsView.swift */; };
+		123D672D2F35EE9200530346 /* PHASE3_1_COMPLETE.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D672C2F35EE9200530346 /* PHASE3_1_COMPLETE.md */; };
+		123D672F2F35EEC400530346 /* ContainerExec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D672E2F35EEC400530346 /* ContainerExec.swift */; };
+		123D67312F35EEE000530346 /* ContainerTerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67302F35EEE000530346 /* ContainerTerminalView.swift */; };
+		123D67332F35EF1700530346 /* PHASE3_2_COMPLETE.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D67322F35EF1700530346 /* PHASE3_2_COMPLETE.md */; };
+		123D67352F35EF4800530346 /* ImageManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67342F35EF4800530346 /* ImageManagement.swift */; };
+		123D67372F35EFB000530346 /* PHASE3_COMPLETE.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D67362F35EFB000530346 /* PHASE3_COMPLETE.md */; };
+		123D67392F35F02800530346 /* PHASE3_FINAL_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = 123D67382F35F02800530346 /* PHASE3_FINAL_SUMMARY.md */; };
+		123D673A2F35F66000530346 /* DesktopAppWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67002F35053500530346 /* DesktopAppWindow.swift */; };
+		123D673B2F35F67C00530346 /* ContainerLogsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D672A2F35EE3A00530346 /* ContainerLogsView.swift */; };
+		123D673C2F35F68900530346 /* ContainerTerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67302F35EEE000530346 /* ContainerTerminalView.swift */; };
+		123D673D2F35F69100530346 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67102F3505C600530346 /* SettingsView.swift */; };
+		123D673F2F35F70600530346 /* ContainerTerminal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D673E2F35F70600530346 /* ContainerTerminal.swift */; };
+		123D67402F35FA9800530346 /* ContainerLogs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67282F35EE1800530346 /* ContainerLogs.swift */; };
+		123D67412F35FF6800530346 /* ContainerTerminal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D673E2F35F70600530346 /* ContainerTerminal.swift */; };
+		123D67422F3600B100530346 /* ContainerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67022F35056500530346 /* ContainerListView.swift */; };
+		123D67432F3600B700530346 /* ImageListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67082F3505A300530346 /* ImageListView.swift */; };
+		123D67442F3600C900530346 /* VolumeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D670A2F3505A300530346 /* VolumeListView.swift */; };
+		123D67452F3600D600530346 /* NetworkListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D670C2F3505A300530346 /* NetworkListView.swift */; };
+		123D67462F3600E300530346 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D670E2F3505C600530346 /* StatsView.swift */; };
+		123D67472F3600F900530346 /* ContainerActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67042F35057A00530346 /* ContainerActions.swift */; };
+		123D67482F3600FF00530346 /* ContainerInspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67062F35059000530346 /* ContainerInspectorView.swift */; };
+		123D674B2F36028C00530346 /* ImageManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123D67342F35EF4800530346 /* ImageManagement.swift */; };
 		125A83B12F04689A009B75F9 /* ContainerSystemMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125A83AB2F046650009B75F9 /* ContainerSystemMonitorTests.swift */; };
 		125A83B42F046997009B75F9 /* ContainerSystemMonitorValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125A83B32F046997009B75F9 /* ContainerSystemMonitorValidation.swift */; };
 		125A83B52F046997009B75F9 /* ContainerSystemMonitorValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125A83B32F046997009B75F9 /* ContainerSystemMonitorValidation.swift */; };
@@ -33,6 +76,35 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		123D67002F35053500530346 /* DesktopAppWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopAppWindow.swift; sourceTree = "<group>"; };
+		123D67022F35056500530346 /* ContainerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerListView.swift; sourceTree = "<group>"; };
+		123D67042F35057A00530346 /* ContainerActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerActions.swift; sourceTree = "<group>"; };
+		123D67062F35059000530346 /* ContainerInspectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerInspectorView.swift; sourceTree = "<group>"; };
+		123D67082F3505A300530346 /* ImageListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageListView.swift; sourceTree = "<group>"; };
+		123D670A2F3505A300530346 /* VolumeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeListView.swift; sourceTree = "<group>"; };
+		123D670C2F3505A300530346 /* NetworkListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkListView.swift; sourceTree = "<group>"; };
+		123D670E2F3505C600530346 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
+		123D67102F3505C600530346 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		123D67142F35068600530346 /* QUICKSTART.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = QUICKSTART.md; sourceTree = "<group>"; };
+		123D67162F3506BE00530346 /* IMPLEMENTATION_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = IMPLEMENTATION_SUMMARY.md; sourceTree = "<group>"; };
+		123D67182F35070100530346 /* ARCHITECTURE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ARCHITECTURE.md; sourceTree = "<group>"; };
+		123D671A2F35073C00530346 /* CHECKLIST.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHECKLIST.md; sourceTree = "<group>"; };
+		123D671C2F35EC5C00530346 /* ContainerLogsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerLogsTests.swift; sourceTree = "<group>"; };
+		123D671E2F35EC9500530346 /* ContainerTerminalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerTerminalTests.swift; sourceTree = "<group>"; };
+		123D67202F35ECE000530346 /* ImageManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageManagementTests.swift; sourceTree = "<group>"; };
+		123D67222F35ED2100530346 /* TDD_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TDD_GUIDE.md; sourceTree = "<group>"; };
+		123D67242F35ED6D00530346 /* TEST_REFERENCE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TEST_REFERENCE.md; sourceTree = "<group>"; };
+		123D67262F35EDA300530346 /* PHASE3_TDD_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = PHASE3_TDD_SUMMARY.md; sourceTree = "<group>"; };
+		123D67282F35EE1800530346 /* ContainerLogs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerLogs.swift; sourceTree = "<group>"; };
+		123D672A2F35EE3A00530346 /* ContainerLogsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerLogsView.swift; sourceTree = "<group>"; };
+		123D672C2F35EE9200530346 /* PHASE3_1_COMPLETE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = PHASE3_1_COMPLETE.md; sourceTree = "<group>"; };
+		123D672E2F35EEC400530346 /* ContainerExec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerExec.swift; sourceTree = "<group>"; };
+		123D67302F35EEE000530346 /* ContainerTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerTerminalView.swift; sourceTree = "<group>"; };
+		123D67322F35EF1700530346 /* PHASE3_2_COMPLETE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = PHASE3_2_COMPLETE.md; sourceTree = "<group>"; };
+		123D67342F35EF4800530346 /* ImageManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageManagement.swift; sourceTree = "<group>"; };
+		123D67362F35EFB000530346 /* PHASE3_COMPLETE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = PHASE3_COMPLETE.md; sourceTree = "<group>"; };
+		123D67382F35F02800530346 /* PHASE3_FINAL_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = PHASE3_FINAL_SUMMARY.md; sourceTree = "<group>"; };
+		123D673E2F35F70600530346 /* ContainerTerminal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerTerminal.swift; sourceTree = "<group>"; };
 		125A837F2F04467C009B75F9 /* container-manager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "container-manager.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		125A838C2F04467C009B75F9 /* container-managerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "container-managerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		125A83962F04467D009B75F9 /* container-managerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "container-managerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -123,6 +195,35 @@
 				125A83C32F046D5A009B75F9 /* Makefile */,
 				125A83802F04467C009B75F9 /* Products */,
 				12A1E9302F05419800F80EDE /* .gitignore */,
+				123D67002F35053500530346 /* DesktopAppWindow.swift */,
+				123D67022F35056500530346 /* ContainerListView.swift */,
+				123D67042F35057A00530346 /* ContainerActions.swift */,
+				123D67062F35059000530346 /* ContainerInspectorView.swift */,
+				123D67082F3505A300530346 /* ImageListView.swift */,
+				123D670A2F3505A300530346 /* VolumeListView.swift */,
+				123D670C2F3505A300530346 /* NetworkListView.swift */,
+				123D670E2F3505C600530346 /* StatsView.swift */,
+				123D67102F3505C600530346 /* SettingsView.swift */,
+				123D67142F35068600530346 /* QUICKSTART.md */,
+				123D67162F3506BE00530346 /* IMPLEMENTATION_SUMMARY.md */,
+				123D67182F35070100530346 /* ARCHITECTURE.md */,
+				123D671A2F35073C00530346 /* CHECKLIST.md */,
+				123D671C2F35EC5C00530346 /* ContainerLogsTests.swift */,
+				123D671E2F35EC9500530346 /* ContainerTerminalTests.swift */,
+				123D67202F35ECE000530346 /* ImageManagementTests.swift */,
+				123D67222F35ED2100530346 /* TDD_GUIDE.md */,
+				123D67242F35ED6D00530346 /* TEST_REFERENCE.md */,
+				123D67262F35EDA300530346 /* PHASE3_TDD_SUMMARY.md */,
+				123D67282F35EE1800530346 /* ContainerLogs.swift */,
+				123D672A2F35EE3A00530346 /* ContainerLogsView.swift */,
+				123D672C2F35EE9200530346 /* PHASE3_1_COMPLETE.md */,
+				123D672E2F35EEC400530346 /* ContainerExec.swift */,
+				123D67302F35EEE000530346 /* ContainerTerminalView.swift */,
+				123D67322F35EF1700530346 /* PHASE3_2_COMPLETE.md */,
+				123D67342F35EF4800530346 /* ImageManagement.swift */,
+				123D67362F35EFB000530346 /* PHASE3_COMPLETE.md */,
+				123D67382F35F02800530346 /* PHASE3_FINAL_SUMMARY.md */,
+				123D673E2F35F70600530346 /* ContainerTerminal.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -233,7 +334,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2620;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					125A837E2F04467C009B75F9 = {
 						CreatedOnToolsVersion = 26.2;
@@ -281,7 +382,18 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				123D67392F35F02800530346 /* PHASE3_FINAL_SUMMARY.md in Resources */,
+				123D672D2F35EE9200530346 /* PHASE3_1_COMPLETE.md in Resources */,
+				123D67272F35EDA300530346 /* PHASE3_TDD_SUMMARY.md in Resources */,
+				123D67232F35ED2100530346 /* TDD_GUIDE.md in Resources */,
 				125A83BC2F046D21009B75F9 /* BUILDING.md in Resources */,
+				123D67372F35EFB000530346 /* PHASE3_COMPLETE.md in Resources */,
+				123D67252F35ED6D00530346 /* TEST_REFERENCE.md in Resources */,
+				123D67192F35070100530346 /* ARCHITECTURE.md in Resources */,
+				123D67332F35EF1700530346 /* PHASE3_2_COMPLETE.md in Resources */,
+				123D67172F3506BE00530346 /* IMPLEMENTATION_SUMMARY.md in Resources */,
+				123D67152F35068600530346 /* QUICKSTART.md in Resources */,
+				123D671B2F35073C00530346 /* CHECKLIST.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -299,7 +411,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				123D67422F3600B100530346 /* ContainerListView.swift in Sources */,
+				123D674B2F36028C00530346 /* ImageManagement.swift in Sources */,
+				123D673D2F35F69100530346 /* SettingsView.swift in Sources */,
+				123D67452F3600D600530346 /* NetworkListView.swift in Sources */,
+				123D67472F3600F900530346 /* ContainerActions.swift in Sources */,
+				123D67432F3600B700530346 /* ImageListView.swift in Sources */,
+				123D673A2F35F66000530346 /* DesktopAppWindow.swift in Sources */,
+				123D67412F35FF6800530346 /* ContainerTerminal.swift in Sources */,
+				123D673C2F35F68900530346 /* ContainerTerminalView.swift in Sources */,
+				123D67442F3600C900530346 /* VolumeListView.swift in Sources */,
+				123D67462F3600E300530346 /* StatsView.swift in Sources */,
 				125A83B52F046997009B75F9 /* ContainerSystemMonitorValidation.swift in Sources */,
+				123D67402F35FA9800530346 /* ContainerLogs.swift in Sources */,
+				123D67482F3600FF00530346 /* ContainerInspectorView.swift in Sources */,
+				123D673B2F35F67C00530346 /* ContainerLogsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,9 +433,27 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				123D670B2F3505A300530346 /* VolumeListView.swift in Sources */,
+				123D670D2F3505A300530346 /* NetworkListView.swift in Sources */,
+				123D67352F35EF4800530346 /* ImageManagement.swift in Sources */,
+				123D672F2F35EEC400530346 /* ContainerExec.swift in Sources */,
+				123D67032F35056500530346 /* ContainerListView.swift in Sources */,
+				123D67312F35EEE000530346 /* ContainerTerminalView.swift in Sources */,
 				125A83C42F046D5A009B75F9 /* Makefile in Sources */,
 				125A83B62F046997009B75F9 /* ContainerSystemMonitorValidation.swift in Sources */,
 				125A83B12F04689A009B75F9 /* ContainerSystemMonitorTests.swift in Sources */,
+				123D67112F3505C600530346 /* SettingsView.swift in Sources */,
+				123D67052F35057A00530346 /* ContainerActions.swift in Sources */,
+				123D671F2F35EC9500530346 /* ContainerTerminalTests.swift in Sources */,
+				123D671D2F35EC5C00530346 /* ContainerLogsTests.swift in Sources */,
+				123D67072F35059000530346 /* ContainerInspectorView.swift in Sources */,
+				123D673F2F35F70600530346 /* ContainerTerminal.swift in Sources */,
+				123D670F2F3505C600530346 /* StatsView.swift in Sources */,
+				123D67012F35053500530346 /* DesktopAppWindow.swift in Sources */,
+				123D67092F3505A300530346 /* ImageListView.swift in Sources */,
+				123D67292F35EE1800530346 /* ContainerLogs.swift in Sources */,
+				123D67212F35ECE000530346 /* ImageManagementTests.swift in Sources */,
+				123D672B2F35EE3A00530346 /* ContainerLogsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -371,6 +515,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -395,6 +540,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -434,6 +580,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -451,6 +598,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -463,6 +611,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6Y922224CW;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
@@ -495,6 +644,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6Y922224CW;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
@@ -525,6 +675,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
@@ -545,6 +696,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
@@ -564,6 +716,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "andybold.container-managerUITests";
@@ -582,6 +735,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "andybold.container-managerUITests";
