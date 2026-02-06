@@ -36,16 +36,6 @@ struct NetworkListView: View {
     }
 }
 
-// MARK: - Network Info Model
-
-struct NetworkInfo: Identifiable {
-    let id = UUID()
-    let name: String
-    let driver: String
-    let scope: String
-    let subnet: String?
-}
-
 // MARK: - Preview
 
 #Preview {
