@@ -109,45 +109,65 @@ struct ContainerListView: View {
                 // Toolbar
                 HStack {
                     // Filter status
-                    Picker("Filter", selection: $filterStatus) {
-                        ForEach(FilterStatus.allCases, id: \.self) { status in
-                            Label(status.rawValue, systemImage: status.systemImage)
-                                .tag(status)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(width: 200)
-                    
-                    Spacer()
-                    
-                    // Sort order
-                    Menu {
-                        Picker("Sort By", selection: $sortOrder) {
-                            ForEach(SortOrder.allCases, id: \.self) { order in
-                                Label(order.rawValue, systemImage: order.systemImage)
-                                    .tag(order)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Filter Items")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Picker("Filter", selection: $filterStatus) {
+                            ForEach(FilterStatus.allCases, id: \.self) { status in
+                                Label(status.rawValue, systemImage: status.systemImage)
+                                    .tag(status)
                             }
                         }
-                    } label: {
-                        Label("Sort", systemImage: "arrow.up.arrow.down")
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .frame(width: 200)
                     }
-                    .frame(width: 80)
-                    
-                    // View mode
-                    Picker("View Mode", selection: $viewMode) {
-                        ForEach(ViewMode.allCases, id: \.self) { mode in
-                            Image(systemName: mode.icon)
-                                .tag(mode)
+
+                    Spacer()
+
+                    // Sort order
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(" ")
+                            .font(.caption)
+                        Menu {
+                            Picker("Sort By", selection: $sortOrder) {
+                                ForEach(SortOrder.allCases, id: \.self) { order in
+                                    Label(order.rawValue, systemImage: order.systemImage)
+                                        .tag(order)
+                                }
+                            }
+                        } label: {
+                            Label("Sort", systemImage: "arrow.up.arrow.down")
                         }
+                        .frame(width: 80)
                     }
-                    .pickerStyle(.segmented)
-                    .frame(width: 80)
-                    
+
+                    // View mode
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("View Mode")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Picker("View Mode", selection: $viewMode) {
+                            ForEach(ViewMode.allCases, id: \.self) { mode in
+                                Image(systemName: mode.icon)
+                                    .tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .frame(width: 80)
+                    }
+
                     // Toggle inspector
-                    Button(action: { showInspector.toggle() }) {
-                        Image(systemName: "sidebar.right")
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(" ")
+                            .font(.caption)
+                        Button(action: { showInspector.toggle() }) {
+                            Image(systemName: "sidebar.right")
+                        }
+                        .help("Toggle Inspector")
                     }
-                    .help("Toggle Inspector")
                 }
                 .padding()
                 .background(.background)

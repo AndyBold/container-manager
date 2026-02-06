@@ -70,7 +70,7 @@ Use this checklist to track your progress implementing the desktop application f
 - [x] Filter dangling images
 - [x] Search images
 
-## Phase 4: Advanced Management ✅ 85% Complete!
+## Phase 4: Advanced Management ✅ COMPLETE!
 
 ### Volume Management ✅
 - [x] Enhance `VolumeListView.swift`
@@ -88,60 +88,62 @@ Use this checklist to track your progress implementing the desktop application f
 - [x] Volume inspection
 - [x] 28 comprehensive tests
 
-### Network Management ✅ (Backend Complete)
-- [ ] Enhance `NetworkListView.swift` (UI pending)
+### Network Management ✅ COMPLETE!
+- [x] Enhance `NetworkListView.swift` with full UI
 - [x] Parse network list command
 - [x] Create `NetworkInfo` data model
-- [x] Display network table (placeholder)
-- [x] Create network dialog (backend ready)
+- [x] Display network table with sortable columns
+- [x] Create network dialog with validation
   - [x] Name input
   - [x] Driver selection
   - [x] Subnet configuration
   - [x] Gateway settings
 - [x] Remove networks with checks
-- [x] Show connected containers (backend)
-- [x] Network inspection details
+- [x] Show connected containers
+- [x] Network inspection details with inspector sheet
 - [x] Connect/disconnect containers
 - [x] Subnet/IP validation
 - [x] 35+ comprehensive tests
 
-## Phase 5: Statistics & Monitoring
+## Phase 5: Statistics & Monitoring ✅ COMPLETE!
 
-### Data Collection
-- [ ] Create `ContainerStats.swift` model
-- [ ] Implement stats collection
-  - [ ] CPU usage per container
-  - [ ] Memory usage per container
-  - [ ] Network I/O
-  - [ ] Disk I/O
-- [ ] Store historical data (in-memory or persistent)
-- [ ] Define data retention policy
-- [ ] Background collection task
+### Data Collection ✅
+- [x] Create `ContainerStats.swift` model (integrated into ContainerSystemMonitor)
+- [x] Implement stats collection
+  - [x] CPU usage per container
+  - [x] Memory usage per container
+  - [x] Network I/O
+  - [x] Disk I/O
+- [x] Store historical data (in-memory time-series)
+- [x] Define data retention policy (6 hours, 2160 data points)
+- [x] Background collection task (10-second intervals)
 
-### Stats Dashboard
-- [ ] Enhance `StatsView.swift`
-- [ ] System overview real data
-  - [ ] Total CPU usage
-  - [ ] Total memory usage
-  - [ ] Network throughput
-- [ ] Per-container charts
-  - [ ] CPU line chart
-  - [ ] Memory line chart
-  - [ ] Network I/O chart
-- [ ] Implement time range selector
-- [ ] Add chart interactions (zoom, pan)
-- [ ] Export stats data
+### Stats Dashboard ✅
+- [x] Enhance `StatsView.swift`
+- [x] System overview real data
+  - [x] Total CPU usage
+  - [x] Total memory usage
+  - [x] Network throughput
+- [x] Per-container charts
+  - [x] CPU line chart with smooth interpolation
+  - [x] Memory area chart with gradient
+  - [x] Network I/O chart (RX/TX dual lines)
+- [x] Implement time range selector (connected to data filtering)
+- [x] Chart styling and polish (axis marks, interpolation)
+- [ ] Add chart interactions (zoom, pan) [Future enhancement]
+- [ ] Export stats data [Future enhancement]
 
-### Inspector Panel Enhancements
-- [ ] Add real resource usage to `ContainerInspectorView`
-- [ ] Live CPU percentage
-- [ ] Live memory usage
-- [ ] Network stats
-- [ ] Disk usage
-- [ ] Process list (if available)
-- [ ] Environment variables
-- [ ] Labels/metadata
-- [ ] Health check status
+### Inspector Panel Enhancements ✅
+- [x] Add real resource usage to `ContainerInspectorView`
+- [x] Live CPU percentage
+- [x] Live memory usage
+- [x] Network stats (RX/TX totals)
+- [x] Environment variables display
+- [x] Labels/metadata display
+- [x] Command and working directory
+- [ ] Disk usage [Future enhancement]
+- [ ] Process list (if available) [Future enhancement]
+- [ ] Health check status [Future enhancement]
 
 ## Phase 6: User Experience
 
@@ -411,24 +413,29 @@ Use this checklist to track your progress implementing the desktop application f
 
 ## Progress Tracking
 
-**Current Phase**: Phase 2 ✅ Complete  
-**Current Phase**: Phase 3 ✅ Complete!
-**Next Milestone**: Phase 4 - Advanced Management  
+**Current Phase**: Phase 5 ✅ Complete!
+**Completed Phases**:
+- Phase 1: Foundation ✅
+- Phase 2: Container Management ✅
+- Phase 3: Core Features ✅
+- Phase 4: Advanced Management ✅
+- Phase 5: Statistics & Monitoring ✅
+
+**Next Milestone**: Phase 6 - User Experience (Settings, Notifications, Polish)
 **Estimated Completion**: Varies by feature priority
 
 ### Quick Stats
-- ✅ Completed: 74 items (Phase 1 + 2 + 3)
+- ✅ Completed: 110+ items (Phases 1-5)
 - 🔨 In Progress: 0 items
-- 📋 Remaining: 160+ items
-- 🧪 Tests Written: 87 tests (~1,640 lines of test code)
-- 💻 Implementation: ~1,770 lines of production code
-- 📊 Overall Progress: ~40%
-- 📊 Overall Progress: ~15%
+- 📋 Remaining: 140+ items
+- 🧪 Tests Written: 87+ tests (~1,640 lines of test code)
+- 💻 Implementation: ~3,500+ lines of production code
+- 📊 Overall Progress: ~45%
 
 ### Priority Ranking
-1. **High**: Logs viewer, Terminal, Image management
-2. **Medium**: Stats collection, Volume/Network management
-3. **Low**: Advanced features, Cloud integration
+1. **High**: Settings enhancements, Notifications, Visual polish
+2. **Medium**: Batch operations, Container creation wizard
+3. **Low**: Cloud integration, Multi-tool support
 
 **Note**: This is a comprehensive checklist. You don't need to implement everything! Pick the features that matter most to your users and iterate based on feedback.
 

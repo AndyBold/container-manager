@@ -20,6 +20,8 @@ struct NetworkListView: View {
     @State private var networkToRemove: NetworkInfo?
     @State private var filterUserDefined = false
     @State private var sortOption: SortOption = .name
+    @State private var showInspector = false
+    @State private var inspectedNetwork: NetworkInfo?
     
     enum SortOption: String, CaseIterable {
         case name = "Name"
@@ -126,6 +128,11 @@ struct NetworkListView: View {
         .sheet(isPresented: $showCreateDialog) {
             NetworkCreateDialog { options in
                 createNetwork(options)
+            }
+        }
+        .sheet(isPresented: $showInspector) {
+            if let network = inspectedNetwork {
+                NetworkInspectorSheet(network: network)
             }
         }
         .alert("Remove Network", isPresented: $showRemoveConfirmation) {
@@ -398,8 +405,10 @@ struct NetworkListView: View {
     private func inspectNetwork(_ network: NetworkInfo) {
         Task {
             if let details = await containerMonitor.inspectNetwork(network.name) {
-                print("Network details: \(details)")
-                // TODO: Show inspector sheet
+                await MainActor.run {
+                    inspectedNetwork = details
+                    showInspector = true
+                }
             }
         }
     }
@@ -599,6 +608,157 @@ struct NetworkCreateDialog: View {
         )
         
         onCreate(options)
+    }
+}
+
+// MARK: - Network Inspector Sheet
+
+struct NetworkInspectorSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let network: NetworkInfo
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                HStack(spacing: 12) {
+                    Image(systemName: network.isDefaultNetwork ? "lock.shield.fill" : "network")
+                        .font(.title2)
+                        .foregroundStyle(network.isDefaultNetwork ? .orange : .blue)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(network.displayName)
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        
+                        Text(network.networkID)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                }
+                
+                Spacer()
+                
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                        .font(.title3)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding()
+            
+            Divider()
+            
+            // Content
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Basic Information
+                    InspectorSection(title: "Basic Information") {
+                        InspectorRow(label: "Name", value: network.name, copyable: true)
+                        InspectorRow(label: "Network ID", value: network.networkID, copyable: true)
+                        InspectorRow(label: "Short ID", value: network.shortID, copyable: true)
+                        InspectorRow(label: "Driver", value: network.driver)
+                        InspectorRow(label: "Scope", value: network.scope)
+                        
+                        if network.containerCount > 0 {
+                            InspectorRow(
+                                label: "Containers",
+                                value: "\(network.containerCount)"
+                            )
+                        }
+                    }
+                    
+                    // Network Configuration
+                    if network.subnet != nil || network.gateway != nil || network.ipRange != nil {
+                        InspectorSection(title: "Network Configuration") {
+                            if let subnet = network.subnet {
+                                InspectorRow(label: "Subnet", value: subnet, copyable: true)
+                            }
+                            
+                            if let gateway = network.gateway {
+                                InspectorRow(label: "Gateway", value: gateway, copyable: true)
+                            }
+                            
+                            if let ipRange = network.ipRange {
+                                InspectorRow(label: "IP Range", value: ipRange, copyable: true)
+                            }
+                        }
+                    }
+                    
+                    // Options
+                    InspectorSection(title: "Options") {
+                        InspectorRow(
+                            label: "Internal",
+                            value: network.internal ? "Yes" : "No"
+                        )
+                        InspectorRow(
+                            label: "IPv6",
+                            value: network.enableIPv6 ? "Yes" : "No"
+                        )
+                        InspectorRow(
+                            label: "System",
+                            value: network.isDefaultNetwork ? "Yes" : "No"
+                        )
+                    }
+                    
+                    // Labels
+                    if let labels = network.labels, !labels.isEmpty {
+                        InspectorSection(title: "Labels") {
+                            ForEach(Array(labels.sorted(by: { $0.key < $1.key })), id: \.key) { key, value in
+                                InspectorRow(label: key, value: value)
+                            }
+                        }
+                    }
+                    
+                    // Metadata
+                    if let created = network.created {
+                        InspectorSection(title: "Metadata") {
+                            InspectorRow(label: "Created", value: formatDate(created))
+                        }
+                    }
+                }
+                .padding()
+            }
+            
+            Divider()
+            
+            // Footer
+            HStack {
+                Button(action: { copyToClipboard(network.networkID) }) {
+                    Label("Copy Network ID", systemImage: "doc.on.doc")
+                }
+                
+                if let subnet = network.subnet {
+                    Button(action: { copyToClipboard(subnet) }) {
+                        Label("Copy Subnet", systemImage: "doc.on.doc")
+                    }
+                }
+                
+                Spacer()
+                
+                Button("Done") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+            }
+            .padding()
+        }
+        .frame(width: 600, height: 700)
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        return formatter.localizedString(for: date, relativeTo: Date())
+    }
+    
+    private func copyToClipboard(_ text: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
     }
 }
 

@@ -309,7 +309,7 @@ struct VolumeListView: View {
                 await MainActor.run {
                     // Update volumes with container counts
                     volumes = fetchedVolumes.map { volume in
-                        var updated = volume
+                        let updated = volume
                         if let usageInfo = usage[volume.name] {
                             return VolumeInfo(
                                 name: volume.name,
