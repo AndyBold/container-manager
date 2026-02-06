@@ -29,7 +29,7 @@ struct ContainerTerminalView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Toolbar
-            HStack {
+            HStack(alignment: .center) {
                 Text("Terminal: \(containerName)")
                     .font(.headline)
                 
@@ -42,6 +42,7 @@ struct ContainerTerminalView: View {
                             Text(shell).tag(shell)
                         }
                     }
+                    .labelsHidden()
                     .frame(width: 150)
                     .disabled(isRunning)
                 }

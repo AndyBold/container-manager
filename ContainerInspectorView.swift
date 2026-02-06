@@ -10,6 +10,7 @@ import SwiftUI
 struct ContainerInspectorView: View {
     @Binding var container: ContainerInfo?
     @EnvironmentObject var containerMonitor: ContainerSystemMonitor
+    @Environment(\.openWindow) private var openWindow
     @State private var containerDetails: ContainerDetails?
     @State private var isLoadingDetails = false
     
@@ -75,23 +76,25 @@ struct ContainerInspectorView: View {
                 // Quick Actions
                 InspectorSection(title: "Quick Actions") {
                     VStack(spacing: 8) {
-                        Button(action: {}) {
+                        Button(action: { openLogs(for: container) }) {
                             Label("View Logs", systemImage: "doc.text")
                                 .frame(maxWidth: .infinity)
                         }
                         .controlSize(.large)
                         
-                        Button(action: {}) {
+                        Button(action: { openTerminal(for: container) }) {
                             Label("Open Terminal", systemImage: "terminal")
                                 .frame(maxWidth: .infinity)
                         }
                         .controlSize(.large)
+                        .disabled(!container.status.lowercased().contains("running"))
                         
-                        Button(action: {}) {
+                        Button(action: { openFiles(for: container) }) {
                             Label("View Files", systemImage: "folder")
                                 .frame(maxWidth: .infinity)
                         }
                         .controlSize(.large)
+                        .disabled(!container.status.lowercased().contains("running"))
                     }
                 }
                 
@@ -281,6 +284,22 @@ struct ContainerInspectorView: View {
             return "-"
         }
         return String(format: "%.0f MB", latest.memoryUsageMB)
+    }
+    
+    // MARK: - Quick Actions
+    
+    private func openLogs(for container: ContainerInfo) {
+        openWindow(id: "logs", value: container.name)
+    }
+    
+    private func openTerminal(for container: ContainerInfo) {
+        openWindow(id: "terminal", value: container.name)
+    }
+    
+    private func openFiles(for container: ContainerInfo) {
+        // TODO: Implement file browser functionality
+        // This would require creating a ContainerFileBrowserView and WindowGroup
+        print("View Files not yet implemented for container: \(container.name)")
     }
 }
 

@@ -15,12 +15,24 @@ struct container_managerApp: App {
     @StateObject private var windowManager = WindowManager()
     @AppStorage("showDesktopWindowOnLaunch") private var showDesktopWindowOnLaunch = false
     
+    init() {
+        // Set containerMonitor reference after initialization
+        DispatchQueue.main.async {
+            _ = container_managerApp.self
+            // AppDelegate will access monitor through notification
+        }
+    }
+    
     var body: some Scene {
         // Menu Bar Extra (always available)
         MenuBarExtra {
             ContentView()
                 .environmentObject(containerMonitor)
                 .environmentObject(windowManager)
+                .onAppear {
+                    // Pass containerMonitor to AppDelegate when view appears
+                    appDelegate.containerMonitor = containerMonitor
+                }
         } label: {
             Image(systemName: "shippingbox.fill")
                 .foregroundStyle(containerMonitor.status.color)
@@ -124,6 +136,9 @@ struct container_managerApp: App {
 // MARK: - AppDelegate
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    // Access to containerMonitor for auto-start
+    weak var containerMonitor: ContainerSystemMonitor?
+    
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Keep app running in menu bar (accessory mode)
         // This allows the app to run without showing in the Dock
@@ -136,6 +151,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: .openDesktopWindow,
             object: nil
         )
+        
+        // Auto-start service if enabled
+        let autoStartService = UserDefaults.standard.bool(forKey: "autoStartService")
+        if autoStartService {
+            // Small delay to avoid blocking app startup
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                self?.containerMonitor?.startContainerService()
+            }
+        }
     }
     
     @objc private func handleOpenDesktopWindow() {

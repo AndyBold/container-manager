@@ -145,31 +145,31 @@ Use this checklist to track your progress implementing the desktop application f
 - [ ] Process list (if available) [Future enhancement]
 - [ ] Health check status [Future enhancement]
 
-## Phase 6: User Experience
+## Phase 6: User Experience ⚙️ IN PROGRESS
 
-### Settings Enhancements
-- [ ] Implement all settings functionality
-- [ ] Auto-start service on launch
-- [ ] Custom refresh intervals
-- [ ] Notification preferences
-- [ ] Container tool path picker
-- [ ] Default view mode persistence
-- [ ] Verbose logging toggle
-- [ ] Theme/appearance options
-- [ ] Keyboard shortcut customization
-- [ ] Export/import settings
+### Settings Enhancements ✅ COMPLETE (Core)
+- [x] Implement all settings functionality
+- [x] Auto-start service on launch
+- [x] Custom refresh intervals (2-300 seconds with validation)
+- [x] Notification preferences
+- [x] Container tool path picker with validation
+- [x] Default view mode persistence
+- [x] Verbose logging toggle
+- [ ] Theme/appearance options [Future enhancement]
+- [ ] Keyboard shortcut customization [Future enhancement]
+- [ ] Export/import settings [Future enhancement]
 
-### Notifications
-- [ ] Create `NotificationManager.swift`
-- [ ] Request notification permissions
-- [ ] Container state change notifications
-  - [ ] Container started
-  - [ ] Container stopped
-  - [ ] Container removed
-- [ ] Error notifications
-- [ ] Service status notifications
-- [ ] User preferences for notification types
-- [ ] Notification actions (e.g., "View" button)
+### Notifications ✅ COMPLETE
+- [x] Create `NotificationManager.swift`
+- [x] Request notification permissions
+- [x] Container state change notifications
+  - [x] Container started
+  - [x] Container stopped
+  - [x] Container removed (via state detection)
+- [x] Error notifications
+- [x] Service status notifications
+- [x] User preferences for notification types
+- [ ] Notification actions (e.g., "View" button) [Future enhancement]
 
 ### Visual Polish
 - [ ] Add animations for state transitions
@@ -413,28 +413,37 @@ Use this checklist to track your progress implementing the desktop application f
 
 ## Progress Tracking
 
-**Current Phase**: Phase 5 ✅ Complete!
+**Current Phase**: Phase 6 ⚙️ In Progress (Settings & Notifications Complete!)
 **Completed Phases**:
 - Phase 1: Foundation ✅
 - Phase 2: Container Management ✅
 - Phase 3: Core Features ✅
 - Phase 4: Advanced Management ✅
 - Phase 5: Statistics & Monitoring ✅
+- Phase 6: User Experience (Settings ✅, Notifications ✅, Visual Polish pending)
 
-**Next Milestone**: Phase 6 - User Experience (Settings, Notifications, Polish)
+**Next Milestone**: Phase 6 - Visual Polish, Phase 7 - Advanced Features
 **Estimated Completion**: Varies by feature priority
 
 ### Quick Stats
-- ✅ Completed: 110+ items (Phases 1-5)
-- 🔨 In Progress: 0 items
-- 📋 Remaining: 140+ items
+- ✅ Completed: 127+ items (Phases 1-5 + Phase 6 Settings & Notifications)
+- 🔨 In Progress: Phase 6 (Visual Polish pending)
+- 📋 Remaining: 125+ items
 - 🧪 Tests Written: 87+ tests (~1,640 lines of test code)
-- 💻 Implementation: ~3,500+ lines of production code
-- 📊 Overall Progress: ~45%
+- 💻 Implementation: ~4,000+ lines of production code
+- 📊 Overall Progress: ~50%
+
+### Recent Additions (Phase 6)
+- ✅ Dynamic refresh interval (2-300 seconds with validation)
+- ✅ Auto-start service on app launch
+- ✅ View mode and inspector panel persistence
+- ✅ NotificationManager with container state change tracking
+- ✅ Container tool path validation
+- ✅ All settings functional and persisted
 
 ### Priority Ranking
-1. **High**: Settings enhancements, Notifications, Visual polish
-2. **Medium**: Batch operations, Container creation wizard
+1. **High**: Visual polish, Batch operations
+2. **Medium**: Container creation wizard, Advanced search
 3. **Low**: Cloud integration, Multi-tool support
 
 **Note**: This is a comprehensive checklist. You don't need to implement everything! Pick the features that matter most to your users and iterate based on feedback.

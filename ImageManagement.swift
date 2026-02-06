@@ -234,7 +234,8 @@ extension ContainerSystemMonitor {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/bin/sh")
             
-            let command = "\(containerPath) images"
+            // Apple's container tool uses 'container image list' (or 'container image ls')
+            let command = "\(containerPath) image list"
             process.arguments = ["-c", command]
             
             // Set up environment
@@ -247,7 +248,9 @@ extension ContainerSystemMonitor {
             process.environment = environment
             
             let outputPipe = Pipe()
+            let errorPipe = Pipe()
             process.standardOutput = outputPipe
+            process.standardError = errorPipe
             
             try process.run()
             process.waitUntilExit()
@@ -256,6 +259,11 @@ extension ContainerSystemMonitor {
                 let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
                 if let output = String(data: data, encoding: .utf8) {
                     return ContainerImageInfo.parseList(output)
+                }
+            } else {
+                let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+                if let errorMessage = String(data: errorData, encoding: .utf8) {
+                    print("Error fetching images: \(errorMessage)")
                 }
             }
             
@@ -278,7 +286,7 @@ extension ContainerSystemMonitor {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/bin/sh")
             
-            let command = "\(containerPath) pull \(fullImageName)"
+            let command = "\(containerPath) image pull \(fullImageName)"
             process.arguments = ["-c", command]
             
             // Set up environment
@@ -327,7 +335,7 @@ extension ContainerSystemMonitor {
                     let process = Process()
                     process.executableURL = URL(fileURLWithPath: "/bin/sh")
                     
-                    let command = "\(containerPath) pull \(fullImageName)"
+                    let command = "\(containerPath) image pull \(fullImageName)"
                     process.arguments = ["-c", command]
                     
                     // Set up environment
@@ -389,7 +397,7 @@ extension ContainerSystemMonitor {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/bin/sh")
             
-            let command = "\(containerPath) push \(fullImageName)"
+            let command = "\(containerPath) image push \(fullImageName)"
             process.arguments = ["-c", command]
             
             // Set up environment
@@ -438,7 +446,7 @@ extension ContainerSystemMonitor {
                     let process = Process()
                     process.executableURL = URL(fileURLWithPath: "/bin/sh")
                     
-                    let command = "\(containerPath) push \(fullImageName)"
+                    let command = "\(containerPath) image push \(fullImageName)"
                     process.arguments = ["-c", command]
                     
                     // Set up environment
@@ -494,8 +502,8 @@ extension ContainerSystemMonitor {
             return ImageOperationResult(success: false, error: "Container path not found")
         }
         
-        // Try different removal commands
-        let commands = force ? ["rmi -f", "delete -f", "rm -f"] : ["rmi", "delete", "rm"]
+        // Apple's container tool uses 'container image delete' or 'container image rm'
+        let commands = force ? ["image delete -f", "image rm -f"] : ["image delete", "image rm"]
         
         for cmd in commands {
             do {

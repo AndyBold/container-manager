@@ -42,7 +42,7 @@ struct ContainerLogsView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Toolbar
-            HStack {
+            HStack(alignment: .center) {
                 Text("Logs: \(containerName)")
                     .font(.headline)
                 
@@ -55,6 +55,7 @@ struct ContainerLogsView: View {
                     Text("stderr").tag(LogEntry.LogStream.stderr as LogEntry.LogStream?)
                 }
                 .pickerStyle(.segmented)
+                .labelsHidden()
                 .frame(width: 200)
                 
                 // Search
@@ -65,6 +66,7 @@ struct ContainerLogsView: View {
                 // Auto-scroll toggle
                 Toggle("Auto-scroll", isOn: $autoScroll)
                     .toggleStyle(.switch)
+                    .fixedSize()
                     .help("Automatically scroll to newest log entries")
                 
                 // Stream toggle
