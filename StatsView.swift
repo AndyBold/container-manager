@@ -11,15 +11,7 @@ import Charts
 struct StatsView: View {
     @EnvironmentObject var containerMonitor: ContainerSystemMonitor
     @State private var selectedContainer: String?
-    @State private var timeRange: TimeRange = .last15Minutes
-    
-    enum TimeRange: String, CaseIterable {
-        case last5Minutes = "5m"
-        case last15Minutes = "15m"
-        case last30Minutes = "30m"
-        case last1Hour = "1h"
-        case last6Hours = "6h"
-    }
+    @State private var timeRange: TimeRange = .fifteenMinutes
     
     var body: some View {
         VStack(spacing: 0) {
@@ -75,6 +67,48 @@ struct StatsView: View {
         }
     }
     
+    // MARK: - System Stats Computed Properties
+    
+    private var systemCPUValue: String {
+        guard let stats = containerMonitor.statsCollector?.systemStats else {
+            return "-"
+        }
+        return String(format: "%.1f%%", stats.averageCPU)
+    }
+    
+    private var systemMemoryValue: String {
+        guard let stats = containerMonitor.statsCollector?.systemStats else {
+            return "-"
+        }
+        return String(format: "%.0f MB", stats.totalMemoryMB)
+    }
+    
+    private var systemNetworkValue: String {
+        guard let stats = containerMonitor.statsCollector?.systemStats else {
+            return "-"
+        }
+        let totalMB = (stats.networkRxBytesPerSec + stats.networkTxBytesPerSec) / (1024 * 1024)
+        return String(format: "%.2f MB/s", totalMB)
+    }
+    
+    // MARK: - Container Stats Helpers
+    
+    private func containerCPUValue(for containerName: String) -> String {
+        guard let history = containerMonitor.statsCollector?.containerStats[containerName],
+              let latest = history.latestSnapshot() else {
+            return "-"
+        }
+        return String(format: "%.1f%%", latest.cpuPercent)
+    }
+    
+    private func containerMemoryValue(for containerName: String) -> String {
+        guard let history = containerMonitor.statsCollector?.containerStats[containerName],
+              let latest = history.latestSnapshot() else {
+            return "-"
+        }
+        return String(format: "%.0f MB", latest.memoryUsageMB)
+    }
+    
     // MARK: - System Overview
     
     private var systemOverviewSection: some View {
@@ -93,7 +127,7 @@ struct StatsView: View {
                 
                 StatCard(
                     title: "CPU Usage",
-                    value: "-",
+                    value: systemCPUValue,
                     subtitle: "System wide",
                     icon: "cpu",
                     color: .green
@@ -101,7 +135,7 @@ struct StatsView: View {
                 
                 StatCard(
                     title: "Memory",
-                    value: "-",
+                    value: systemMemoryValue,
                     subtitle: "Total used",
                     icon: "memorychip",
                     color: .orange
@@ -109,7 +143,7 @@ struct StatsView: View {
                 
                 StatCard(
                     title: "Network",
-                    value: "-",
+                    value: systemNetworkValue,
                     subtitle: "Combined I/O",
                     icon: "network",
                     color: .purple
@@ -147,7 +181,7 @@ struct StatsView: View {
                 .controlSize(.small)
             }
             
-            // Placeholder charts
+            // Charts
             HStack(spacing: 16) {
                 // CPU Chart
                 VStack(alignment: .leading, spacing: 8) {
@@ -156,19 +190,33 @@ struct StatsView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        Text("-")
+                        Text(containerCPUValue(for: container.name))
                             .font(.caption)
                             .fontWeight(.semibold)
+                            .foregroundStyle(.green)
                     }
                     
-                    Rectangle()
-                        .fill(Color.green.opacity(0.2))
+                    if let data = containerMonitor.statsCollector?.containerStats[container.name]?.dataPoints(for: timeRange), !data.isEmpty {
+                        Chart(data) { point in
+                            LineMark(
+                                x: .value("Time", point.timestamp),
+                                y: .value("CPU %", point.cpuPercent)
+                            )
+                            .foregroundStyle(.green)
+                        }
+                        .chartYScale(domain: 0...100)
+                        .chartXAxis(.hidden)
                         .frame(height: 60)
-                        .overlay(
-                            Text("Live stats coming soon")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        )
+                    } else {
+                        Rectangle()
+                            .fill(Color.green.opacity(0.1))
+                            .frame(height: 60)
+                            .overlay(
+                                Text("No data")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            )
+                    }
                 }
                 
                 // Memory Chart
@@ -178,19 +226,32 @@ struct StatsView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        Text("-")
+                        Text(containerMemoryValue(for: container.name))
                             .font(.caption)
                             .fontWeight(.semibold)
+                            .foregroundStyle(.orange)
                     }
                     
-                    Rectangle()
-                        .fill(Color.orange.opacity(0.2))
+                    if let data = containerMonitor.statsCollector?.containerStats[container.name]?.dataPoints(for: timeRange), !data.isEmpty {
+                        Chart(data) { point in
+                            AreaMark(
+                                x: .value("Time", point.timestamp),
+                                y: .value("Memory MB", point.memoryUsageMB)
+                            )
+                            .foregroundStyle(.orange.gradient.opacity(0.6))
+                        }
+                        .chartXAxis(.hidden)
                         .frame(height: 60)
-                        .overlay(
-                            Text("Live stats coming soon")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        )
+                    } else {
+                        Rectangle()
+                            .fill(Color.orange.opacity(0.1))
+                            .frame(height: 60)
+                            .overlay(
+                                Text("No data")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            )
+                    }
                 }
             }
         }

@@ -105,30 +105,30 @@ Use this checklist to track your progress implementing the desktop application f
 - [x] Subnet/IP validation
 - [x] 35+ comprehensive tests
 
-## Phase 5: Statistics & Monitoring
+## Phase 5: Statistics & Monitoring (In Progress - 40% Complete)
 
-### Data Collection
-- [ ] Create `ContainerStats.swift` model
-- [ ] Implement stats collection
-  - [ ] CPU usage per container
-  - [ ] Memory usage per container
-  - [ ] Network I/O
-  - [ ] Disk I/O
-- [ ] Store historical data (in-memory or persistent)
-- [ ] Define data retention policy
-- [ ] Background collection task
+### Data Collection ✅
+- [x] Create `ContainerStats.swift` model (integrated into ContainerSystemMonitor)
+- [x] Implement stats collection
+  - [x] CPU usage per container
+  - [x] Memory usage per container
+  - [x] Network I/O
+  - [x] Disk I/O
+- [x] Store historical data (in-memory time-series)
+- [x] Define data retention policy (6 hours, 2160 data points)
+- [x] Background collection task (10-second intervals)
 
-### Stats Dashboard
-- [ ] Enhance `StatsView.swift`
-- [ ] System overview real data
-  - [ ] Total CPU usage
-  - [ ] Total memory usage
-  - [ ] Network throughput
-- [ ] Per-container charts
-  - [ ] CPU line chart
-  - [ ] Memory line chart
+### Stats Dashboard (Partial)
+- [x] Enhance `StatsView.swift`
+- [x] System overview real data
+  - [x] Total CPU usage
+  - [x] Total memory usage
+  - [x] Network throughput
+- [x] Per-container charts
+  - [x] CPU line chart
+  - [x] Memory area chart
   - [ ] Network I/O chart
-- [ ] Implement time range selector
+- [x] Implement time range selector (connected to data filtering)
 - [ ] Add chart interactions (zoom, pan)
 - [ ] Export stats data
 
