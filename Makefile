@@ -60,6 +60,7 @@ release-signed:
 		CODE_SIGN_IDENTITY="$$SIGNING_ID" \
 		CODE_SIGN_STYLE=Manual \
 		DEVELOPMENT_TEAM=6Y922224CW \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
 		OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime"
 	@echo "✅ Signed build complete"
 
