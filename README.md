@@ -4,7 +4,7 @@ A native macOS application for monitoring and managing containers. Built with Sw
 
 **Now featuring a full desktop application!** Use it as a lightweight menu bar app or open the comprehensive desktop interface for advanced management.
 
-![macOS](https://img.shields.io/badge/macOS-14.0+-blue)
+![macOS](https://img.shields.io/badge/macOS-26.0+-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9+-orange)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-native-green)
 ![Version](https://img.shields.io/badge/version-1.1.0-brightgreen)
