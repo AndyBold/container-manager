@@ -123,6 +123,22 @@ After building:
 2. Look for the shipping box icon in your menu bar
 3. Click it to open the container manager
 
+### Creating a Release Build
+
+We use a local build system for releases (no CI/CD required):
+
+```bash
+# One-command release workflow
+make release-workflow
+# Enter version: v1.0.0
+
+# Or step by step
+make clean dmg
+make upload-release VERSION=v1.0.0
+```
+
+This creates a DMG package and uploads it to GitHub as a draft release. See [`RELEASE_QUICK_START.md`](RELEASE_QUICK_START.md) for details.
+
 ## 🎨 User Interface
 
 ### Main Window
