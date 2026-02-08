@@ -159,6 +159,67 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 ## Common Patterns
 
+### Animation Preferences
+
+**Always respect user animation preferences and macOS accessibility settings:**
+
+```swift
+// ✅ Good - Respects both app and system preferences
+@AppStorage("enableAnimations") private var enableAnimations = true
+@AppStorage("reduceMotion") private var reduceMotion = false
+
+VStack {
+    // content
+}
+.animated(.smooth, value: someState)  // Automatically checks system settings
+
+// Alternative using AnimationPreferences helper
+let prefs = AnimationPreferences()
+.animation(prefs.defaultAnimation, value: someState)
+```
+
+**Available animation preferences:**
+- `enableAnimations`: Master toggle for all animations
+- `reduceMotion`: Use linear animations instead of springs/easing
+- `showLoadingIndicators`: Show progress indicators
+- `compactMode`: Use denser layouts with reduced spacing
+- `showEmptyStateIllustrations`: Show illustrations in empty states
+
+**macOS Accessibility Integration:**
+The app automatically respects these system settings:
+- **Reduce Motion** (`NSWorkspace.shared.accessibilityDisplayShouldReduceMotion`)
+  - Overrides app animation preferences when enabled
+  - Forces linear animations with shorter durations
+- **Reduce Transparency** (`NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency`)
+  - Increases background opacity from 0.95 to 1.0
+  - Increases overlay opacity from 0.8 to 0.95
+- **Increase Contrast** (`NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast`)
+  - Available via `AnimationPreferences.shouldIncreaseContrast`
+  - Use for selecting higher contrast color variants
+
+**Animation helpers from AnimationPreferences:**
+```swift
+let prefs = AnimationPreferences()
+
+// Default animations (respects system reduce motion)
+prefs.defaultAnimation     // .smooth or .linear or nil
+prefs.springAnimation      // .spring or .linear or nil
+prefs.quickAnimation       // .easeInOut(0.15) or .linear or nil
+prefs.slowAnimation        // .easeInOut(0.5) or .linear or nil
+
+// Effective reduce motion (app OR system)
+prefs.effectiveReduceMotion  // true if either setting is enabled
+
+// Accessibility-aware opacity
+prefs.overlayOpacity       // 0.95 or 0.8 based on system settings
+prefs.backgroundOpacity    // 1.0 or 0.95 based on system settings
+
+// Layout values based on compact mode
+prefs.spacing              // 8 or 16
+prefs.padding              // 8 or 12
+prefs.cardPadding          // 12 or 16
+```
+
 ### Stats Collection
 
 - Collect every 10 seconds in background
@@ -185,6 +246,12 @@ private func performContainerOperation(command: String, containerName: String) a
 .padding()
 .background(Color(nsColor: .controlBackgroundColor))
 .cornerRadius(12)
+
+// With animation support
+@AppStorage("enableAnimations") private var enableAnimations = true
+
+SomeView()
+    .animated(.smooth, value: someState)
 ```
 
 ## Dependencies
@@ -213,10 +280,19 @@ Keep README.md focused on getting started and features.
 
 ## Accessibility
 
+### System Integration
+- **Automatically respects macOS accessibility settings:**
+  - Reduce Motion (forces linear animations)
+  - Reduce Transparency (increases opacity)
+  - Increase Contrast (queryable via `AnimationPreferences.shouldIncreaseContrast`)
+
+### Best Practices
 - Always provide `.help()` tooltips for icon-only buttons
 - Use SF Symbols for consistent iconography
-- Ensure good contrast ratios
+- Ensure good contrast ratios (consider `shouldIncreaseContrast`)
 - Label all interactive elements
+- Use `AnimationPreferences` for animations to respect user settings
+- Test with all accessibility settings enabled
 
 ## Common Issues & Solutions
 
@@ -235,4 +311,4 @@ Keep README.md focused on getting started and features.
 ---
 
 **Last Updated:** 2026-02-07
-**Project Phase:** Stats Visualization Complete
+**Project Phase:** Phase 6 - Visual Polish (Animation Preferences)

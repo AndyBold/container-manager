@@ -7,12 +7,34 @@
 
 import SwiftUI
 import Charts
+import AppKit
 
 struct StatsView: View {
     @EnvironmentObject var containerMonitor: ContainerSystemMonitor
     @State private var selectedContainer: String?
     @State private var timeRange: TimeRange = .fifteenMinutes
     @State private var showingDetailedStats = false
+    
+    @AppStorage("enableAnimations") private var enableAnimations = true
+    @AppStorage("reduceMotion") private var reduceMotion = false
+    @AppStorage("compactMode") private var compactMode = false
+    @AppStorage("showEmptyStateIllustrations") private var showEmptyStateIllustrations = true
+    
+    // Effective reduce motion (app OR system)
+    private var effectiveReduceMotion: Bool {
+        reduceMotion || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+    }
+    
+    // Animation based on preferences
+    private var defaultAnimation: Animation? {
+        guard enableAnimations else { return nil }
+        return effectiveReduceMotion ? .linear(duration: 0.2) : .smooth
+    }
+    
+    private var springAnimation: Animation? {
+        guard enableAnimations else { return nil }
+        return effectiveReduceMotion ? .linear(duration: 0.2) : .spring(response: 0.3, dampingFraction: 0.7)
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -60,17 +82,24 @@ struct StatsView: View {
     
     private var statsContent: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: compactMode ? 12 : 20) {
                 // System Overview
                 systemOverviewSection
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 
                 // Per-container stats
                 ForEach(runningContainers) { container in
                     containerStatsCard(for: container)
                         .id("\(container.id)-\(timeRange.rawValue)")
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .bottom)),
+                            removal: .opacity.combined(with: .scale(scale: 0.9))
+                        ))
                 }
             }
-            .padding()
+            .padding(compactMode ? 12 : 16)
+            .animation(defaultAnimation, value: runningContainers.count)
+            .animation(springAnimation, value: timeRange)
         }
     }
     
@@ -153,42 +182,50 @@ struct StatsView: View {
     // MARK: - System Overview
     
     private var systemOverviewSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: compactMode ? 8 : 12) {
             Text("System Overview")
                 .font(.headline)
             
-            HStack(spacing: 16) {
+            HStack(spacing: compactMode ? 12 : 16) {
                 StatCard(
                     title: "Containers",
                     value: "\(containerMonitor.containers.count)",
                     subtitle: "\(runningContainers.count) running",
                     icon: "shippingbox.fill",
-                    color: .blue
+                    color: .blue,
+                    enableAnimations: enableAnimations
                 )
+                .animation(springAnimation, value: containerMonitor.containers.count)
                 
                 StatCard(
                     title: "CPU Usage",
                     value: systemCPUValue,
                     subtitle: "System wide",
                     icon: "cpu",
-                    color: .green
+                    color: .green,
+                    enableAnimations: enableAnimations
                 )
+                .animation(defaultAnimation, value: systemCPUValue)
                 
                 StatCard(
                     title: "Memory",
                     value: systemMemoryValue,
                     subtitle: "Total used",
                     icon: "memorychip",
-                    color: .orange
+                    color: .orange,
+                    enableAnimations: enableAnimations
                 )
+                .animation(defaultAnimation, value: systemMemoryValue)
                 
                 StatCard(
                     title: "Network",
                     value: systemNetworkValue,
                     subtitle: "Combined I/O",
                     icon: "network",
-                    color: .purple
+                    color: .purple,
+                    enableAnimations: enableAnimations
                 )
+                .animation(defaultAnimation, value: systemNetworkValue)
             }
         }
     }
@@ -197,7 +234,7 @@ struct StatsView: View {
     
     @ViewBuilder
     private func containerStatsCard(for container: ContainerInfo) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: compactMode ? 12 : 16) {
             // Header
             HStack {
                 Image(systemName: "shippingbox.fill")
@@ -338,10 +375,13 @@ struct StatsView: View {
     // MARK: - Empty State
     
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "chart.xyaxis.line")
-                .font(.system(size: 60))
-                .foregroundStyle(.secondary)
+        VStack(spacing: compactMode ? 12 : 16) {
+            if showEmptyStateIllustrations {
+                Image(systemName: "chart.xyaxis.line")
+                    .font(.system(size: compactMode ? 50 : 60))
+                    .foregroundStyle(.secondary)
+                    .symbolEffect(.pulse, options: enableAnimations ? .default : .default.speed(0))
+            }
             
             Text("No Statistics Available")
                 .font(.title2)
@@ -352,6 +392,7 @@ struct StatsView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
     }
 }
 
@@ -363,20 +404,25 @@ struct StatCard: View {
     let subtitle: String
     let icon: String
     let color: Color
+    var enableAnimations: Bool = true
+    
+    @AppStorage("compactMode") private var compactMode = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: compactMode ? 6 : 8) {
             HStack {
                 Image(systemName: icon)
                     .foregroundStyle(color)
-                    .imageScale(.large)
+                    .imageScale(compactMode ? .medium : .large)
+                    .symbolEffect(.pulse, options: enableAnimations ? .default : .default.speed(0))
                 
                 Spacer()
             }
             
             Text(value)
-                .font(.title)
+                .font(compactMode ? .title2 : .title)
                 .fontWeight(.bold)
+                .contentTransition(.numericText())
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -388,10 +434,10 @@ struct StatCard: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding()
+        .padding(compactMode ? 12 : 16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(nsColor: .controlBackgroundColor))
-        .cornerRadius(12)
+        .cornerRadius(compactMode ? 10 : 12)
     }
 }
 

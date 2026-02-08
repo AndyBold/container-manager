@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct ContainerListView: View {
     @EnvironmentObject var containerMonitor: ContainerSystemMonitor
@@ -13,16 +14,82 @@ struct ContainerListView: View {
     
     @AppStorage("defaultViewMode") private var defaultViewMode = "list"
     @AppStorage("showInspectorPanel") private var defaultShowInspector = true
+    @AppStorage("enableAnimations") private var enableAnimations = true
+    @AppStorage("reduceMotion") private var reduceMotion = false
+    @AppStorage("compactMode") private var compactMode = false
     
     @State private var selectedContainerID: ContainerInfo.ID?
+    @State private var selectedContainerIDs: Set<ContainerInfo.ID> = []
     @State private var viewMode: ViewMode = .list
     @State private var filterStatus: FilterStatus = .all
     @State private var sortOrder: SortOrder = .name
     @State private var showInspector = true
+    @State private var showBatchConfirmation = false
+    @State private var batchOperation: BatchOperation?
+    @State private var isBatchOperating = false
+    @State private var showingCreationWizard = false
+    
+    // Effective reduce motion (app OR system)
+    private var effectiveReduceMotion: Bool {
+        reduceMotion || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+    }
+    
+    // Animation based on preferences
+    private var defaultAnimation: Animation? {
+        guard enableAnimations else { return nil }
+        return effectiveReduceMotion ? .linear(duration: 0.2) : .smooth
+    }
+    
+    private var springAnimation: Animation? {
+        guard enableAnimations else { return nil }
+        return effectiveReduceMotion ? .linear(duration: 0.2) : .spring(response: 0.3, dampingFraction: 0.7)
+    }
     
     private var selectedContainer: ContainerInfo? {
         guard let selectedContainerID else { return nil }
         return filteredContainers.first { $0.id == selectedContainerID }
+    }
+    
+    private var selectedContainers: [ContainerInfo] {
+        filteredContainers.filter { selectedContainerIDs.contains($0.id) }
+    }
+    
+    enum BatchOperation {
+        case start
+        case stop
+        case restart
+        case remove
+        
+        var title: String {
+            switch self {
+            case .start: return "Start Containers"
+            case .stop: return "Stop Containers"
+            case .restart: return "Restart Containers"
+            case .remove: return "Remove Containers"
+            }
+        }
+        
+        var message: String {
+            switch self {
+            case .start: return "Are you sure you want to start the selected containers?"
+            case .stop: return "Are you sure you want to stop the selected containers?"
+            case .restart: return "Are you sure you want to restart the selected containers?"
+            case .remove: return "Are you sure you want to remove the selected containers? This action cannot be undone."
+            }
+        }
+        
+        var confirmButtonText: String {
+            switch self {
+            case .start: return "Start"
+            case .stop: return "Stop"
+            case .restart: return "Restart"
+            case .remove: return "Remove"
+            }
+        }
+        
+        var isDestructive: Bool {
+            self == .remove
+        }
     }
     
     enum ViewMode: String, CaseIterable {
@@ -108,9 +175,15 @@ struct ContainerListView: View {
     var body: some View {
         HSplitView {
             // Main container list
-            VStack(spacing: 0) {
+            VStack(spacing: compactMode ? 0 : 0) {
+                // Batch actions toolbar (appears when items are selected)
+                if !selectedContainerIDs.isEmpty {
+                    batchActionsToolbar
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                
                 // Toolbar
-                HStack {
+                HStack(spacing: compactMode ? 12 : 16) {
                     // Filter status
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Filter Items")
@@ -162,6 +235,17 @@ struct ContainerListView: View {
                         .frame(width: 80)
                     }
 
+                    // Create container
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(" ")
+                            .font(.caption)
+                        Button(action: { showingCreationWizard = true }) {
+                            Label("New", systemImage: "plus")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .help("Create New Container")
+                    }
+                    
                     // Toggle inspector
                     VStack(alignment: .leading, spacing: 4) {
                         Text(" ")
@@ -180,15 +264,19 @@ struct ContainerListView: View {
                 // Content
                 if filteredContainers.isEmpty {
                     emptyStateView
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 } else {
                     Group {
                         switch viewMode {
                         case .list:
                             listView
+                                .transition(.opacity.combined(with: .move(edge: .leading)))
                         case .grid:
                             gridView
+                                .transition(.opacity.combined(with: .move(edge: .trailing)))
                         }
                     }
+                    .animation(defaultAnimation, value: viewMode)
                 }
             }
             .frame(minWidth: 400)
@@ -197,8 +285,11 @@ struct ContainerListView: View {
             if showInspector {
                 ContainerInspectorView(container: .constant(selectedContainer))
                     .frame(width: 300)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
+        .animation(springAnimation, value: showInspector)
+        .animation(defaultAnimation, value: filteredContainers.count)
         .onAppear {
             // Initialize state from settings
             viewMode = ViewMode(rawValue: defaultViewMode) ?? .list
@@ -212,12 +303,112 @@ struct ContainerListView: View {
             // Persist inspector visibility changes
             defaultShowInspector = newValue
         }
+        .alert(batchOperation?.title ?? "Batch Operation", isPresented: $showBatchConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button(batchOperation?.confirmButtonText ?? "Confirm", role: batchOperation?.isDestructive == true ? .destructive : nil) {
+                if let operation = batchOperation {
+                    performBatchOperation(operation)
+                }
+            }
+        } message: {
+            Text(batchOperation?.message ?? "")
+        }
+        .sheet(isPresented: $showingCreationWizard) {
+            ContainerCreationView()
+                .environmentObject(containerMonitor)
+        }
+    }
+    
+    // MARK: - Batch Actions Toolbar
+    
+    private var batchActionsToolbar: some View {
+        HStack(spacing: compactMode ? 12 : 16) {
+            // Selection count
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.blue)
+                Text("\(selectedContainerIDs.count) selected")
+                    .font(.headline)
+            }
+            
+            Spacer()
+            
+            // Batch actions
+            if isBatchOperating {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                        .controlSize(.small)
+                    Text("Processing...")
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                HStack(spacing: 8) {
+                    Button(action: {
+                        batchOperation = .start
+                        showBatchConfirmation = true
+                    }) {
+                        Label("Start", systemImage: "play.fill")
+                    }
+                    .help("Start selected containers")
+                    
+                    Button(action: {
+                        batchOperation = .stop
+                        showBatchConfirmation = true
+                    }) {
+                        Label("Stop", systemImage: "stop.fill")
+                    }
+                    .help("Stop selected containers")
+                    
+                    Button(action: {
+                        batchOperation = .restart
+                        showBatchConfirmation = true
+                    }) {
+                        Label("Restart", systemImage: "arrow.clockwise")
+                    }
+                    .help("Restart selected containers")
+                    
+                    Divider()
+                        .frame(height: 20)
+                    
+                    Button(action: {
+                        batchOperation = .remove
+                        showBatchConfirmation = true
+                    }) {
+                        Label("Remove", systemImage: "trash")
+                    }
+                    .foregroundStyle(.red)
+                    .help("Remove selected containers")
+                }
+                .buttonStyle(.borderless)
+                .controlSize(.small)
+            }
+            
+            // Clear selection
+            Button(action: {
+                selectedContainerIDs.removeAll()
+            }) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.borderless)
+            .help("Clear selection")
+        }
+        .padding(.horizontal)
+        .padding(.vertical, compactMode ? 8 : 12)
+        .background(.blue.opacity(0.1))
+        .overlay(
+            Rectangle()
+                .fill(.blue.opacity(0.3))
+                .frame(height: 1),
+            alignment: .bottom
+        )
     }
     
     // MARK: - List View
     
     private var listView: some View {
-        Table(filteredContainers, selection: $selectedContainerID) {
+        Table(filteredContainers, selection: $selectedContainerIDs) {
             TableColumn("Name") { container in
                 HStack(spacing: 8) {
                     Image(systemName: statusIcon(for: container))
@@ -275,22 +466,35 @@ struct ContainerListView: View {
             }
             .width(40)
         }
-        .contextMenu(forSelectionType: ContainerInfo.self) { items in
-            if items.count == 1, let container = items.first {
-                ContainerContextMenu(container: container)
-                    .environmentObject(containerMonitor)
+        .contextMenu(forSelectionType: ContainerInfo.ID.self) { items in
+            if items.count == 1 {
+                if let container = filteredContainers.first(where: { items.contains($0.id) }) {
+                    ContainerContextMenu(container: container)
+                        .environmentObject(containerMonitor)
+                }
             } else if items.count > 1 {
                 Button("Start Selected (\(items.count))") {
-                    // TODO: Batch operations
+                    batchOperation = .start
+                    showBatchConfirmation = true
                 }
                 Button("Stop Selected (\(items.count))") {
-                    // TODO: Batch operations
+                    batchOperation = .stop
+                    showBatchConfirmation = true
+                }
+                Button("Restart Selected (\(items.count))") {
+                    batchOperation = .restart
+                    showBatchConfirmation = true
                 }
                 Divider()
                 Button("Remove Selected (\(items.count))", role: .destructive) {
-                    // TODO: Batch operations
+                    batchOperation = .remove
+                    showBatchConfirmation = true
                 }
             }
+        }
+        .onChange(of: selectedContainerIDs) { _, newValue in
+            // Update single selection for inspector
+            selectedContainerID = newValue.first
         }
     }
     
@@ -319,10 +523,11 @@ struct ContainerListView: View {
     // MARK: - Empty State
     
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: compactMode ? 12 : 16) {
             Image(systemName: "shippingbox")
-                .font(.system(size: 60))
+                .font(.system(size: compactMode ? 50 : 60))
                 .foregroundStyle(.secondary)
+                .symbolEffect(.pulse, options: enableAnimations ? .default : .default.speed(0))
             
             Text(emptyStateTitle)
                 .font(.title2)
@@ -342,7 +547,7 @@ struct ContainerListView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .padding(compactMode ? 16 : 24)
     }
     
     private var emptyStateTitle: String {
@@ -362,6 +567,59 @@ struct ContainerListView: View {
             return "No containers match your search criteria"
         } else {
             return "Create or import a container to get started"
+        }
+    }
+    
+    // MARK: - Batch Operations
+    
+    private func performBatchOperation(_ operation: BatchOperation) {
+        let containers = selectedContainers
+        guard !containers.isEmpty else { return }
+        
+        isBatchOperating = true
+        
+        Task {
+            var successCount = 0
+            var failureCount = 0
+            
+            for container in containers {
+                let success: Bool
+                switch operation {
+                case .start:
+                    success = await containerMonitor.startContainer(named: container.name)
+                case .stop:
+                    success = await containerMonitor.stopContainer(named: container.name)
+                case .restart:
+                    success = await containerMonitor.restartContainer(named: container.name)
+                case .remove:
+                    success = await containerMonitor.removeContainer(named: container.name)
+                }
+                
+                if success {
+                    successCount += 1
+                } else {
+                    failureCount += 1
+                    print("Failed to \(operation.confirmButtonText.lowercased()) container \(container.name)")
+                }
+                
+                // Small delay between operations to avoid overwhelming the system
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            }
+            
+            await MainActor.run {
+                isBatchOperating = false
+                selectedContainerIDs.removeAll()
+                
+                // Show notification with results
+                if failureCount == 0 {
+                    print("✓ Successfully \(operation.confirmButtonText.lowercased())ed \(successCount) container(s)")
+                } else {
+                    print("⚠ Completed with \(successCount) success(es) and \(failureCount) failure(s)")
+                }
+            }
+            
+            // Refresh container list
+            await containerMonitor.checkAppleContainerStatus()
         }
     }
     
@@ -403,6 +661,8 @@ struct ContainerListView: View {
 struct StatusBadge: View {
     let status: String
     
+    @AppStorage("enableAnimations") private var enableAnimations = true
+    
     private var color: Color {
         switch status.lowercased() {
         case let s where s == "running" || s == "up" || s.contains("running"):
@@ -418,14 +678,29 @@ struct StatusBadge: View {
         }
     }
     
+    private var isRunning: Bool {
+        let s = status.lowercased()
+        return s == "running" || s == "up" || s.contains("running")
+    }
+    
     var body: some View {
-        Text(status.capitalized)
-            .font(.caption)
-            .fontWeight(.medium)
-            .foregroundStyle(color)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.15), in: Capsule())
+        HStack(spacing: 4) {
+            if isRunning {
+                Circle()
+                    .fill(color)
+                    .frame(width: 6, height: 6)
+                    .opacity(enableAnimations ? 0.8 : 1.0)
+                    .symbolEffect(.pulse, options: enableAnimations ? .repeating : .default.speed(0))
+            }
+            
+            Text(status.capitalized)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundStyle(color)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
+        .background(color.opacity(0.15), in: Capsule())
     }
 }
 
@@ -436,7 +711,22 @@ struct ContainerCardView: View {
     let container: ContainerInfo
     let isSelected: Bool
     
+    @AppStorage("enableAnimations") private var enableAnimations = true
+    @AppStorage("reduceMotion") private var reduceMotion = false
+    @AppStorage("compactMode") private var compactMode = false
+    
     @State private var isHovered = false
+    
+    // Effective reduce motion (app OR system)
+    private var effectiveReduceMotion: Bool {
+        reduceMotion || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+    }
+    
+    // Animation based on preferences
+    private var hoverAnimation: Animation? {
+        guard enableAnimations else { return nil }
+        return effectiveReduceMotion ? .linear(duration: 0.15) : .easeInOut(duration: 0.2)
+    }
     
     private var isRunning: Bool {
         let status = container.status.lowercased()
@@ -444,18 +734,20 @@ struct ContainerCardView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: compactMode ? 8 : 12) {
             // Header
             HStack {
                 Image(systemName: isRunning ? "checkmark.circle.fill" : "stop.circle.fill")
                     .foregroundStyle(isRunning ? .green : .red)
                     .imageScale(.large)
+                    .symbolEffect(.pulse, options: isRunning && enableAnimations ? .repeating : .default.speed(0))
                 
                 Spacer()
                 
                 if isHovered || isSelected {
                     ContainerActionsMenu(container: container)
                         .environmentObject(containerMonitor)
+                        .transition(.opacity.combined(with: .scale(scale: 0.8)))
                 }
             }
             
@@ -488,19 +780,20 @@ struct ContainerCardView: View {
                 }
             }
         }
-        .padding()
-        .frame(height: 160)
+        .padding(compactMode ? 12 : 16)
+        .frame(height: compactMode ? 140 : 160)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: compactMode ? 10 : 12)
                 .fill(isSelected ? Color.accentColor.opacity(0.1) : Color(.controlBackgroundColor))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: compactMode ? 10 : 12)
                 .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
         )
         .shadow(color: .black.opacity(0.05), radius: isHovered ? 8 : 4, y: isHovered ? 4 : 2)
-        .scaleEffect(isHovered ? 1.02 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isHovered)
+        .scaleEffect(isHovered && enableAnimations ? (effectiveReduceMotion ? 1.01 : 1.02) : 1.0)
+        .animation(hoverAnimation, value: isHovered)
+        .animation(hoverAnimation, value: isSelected)
         .onHover { hovering in
             isHovered = hovering
         }

@@ -142,7 +142,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Keep app running in menu bar (accessory mode)
         // This allows the app to run without showing in the Dock
+        // Note: Using .accessory keeps the app in menu bar only
         NSApp.setActivationPolicy(.accessory)
+        
+        // Observe window open/close to manage activation policy
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateActivationPolicy()
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            // Delay to check after window closes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self?.updateActivationPolicy()
+            }
+        }
         
         // Set up notification observers for opening windows
         NotificationCenter.default.addObserver(
@@ -168,27 +189,41 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     private func openWindow(id: String) {
-        // Temporarily change to regular app to show window
-        NSApp.setActivationPolicy(.regular)
-        
         // Find and show the window
         for window in NSApplication.shared.windows {
             if window.identifier?.rawValue == id {
+                // Temporarily switch to regular to show window properly
+                NSApp.setActivationPolicy(.regular)
                 window.makeKeyAndOrderFront(nil)
                 NSApp.activate(ignoringOtherApps: true)
                 return
             }
         }
         
-        // If no desktop windows are open, revert to accessory
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            let hasVisibleWindows = NSApplication.shared.windows.contains { window in
-                window.isVisible && window.identifier?.rawValue == "desktop-window"
+        // Window doesn't exist yet, switch to regular so it can be created
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    private func updateActivationPolicy() {
+        // Check if we have any visible non-menu-bar windows
+        let hasVisibleWindows = NSApplication.shared.windows.contains { window in
+            // Exclude menu bar extra windows and invisible windows
+            guard window.isVisible,
+                  window.canBecomeKey,
+                  window.title != "",
+                  window.level == .normal else {
+                return false
             }
-            
-            if !hasVisibleWindows {
-                NSApp.setActivationPolicy(.accessory)
-            }
+            return true
+        }
+        
+        // Switch policy based on visible windows
+        let currentPolicy = NSApp.activationPolicy()
+        if hasVisibleWindows && currentPolicy == .accessory {
+            NSApp.setActivationPolicy(.regular)
+        } else if !hasVisibleWindows && currentPolicy == .regular {
+            NSApp.setActivationPolicy(.accessory)
         }
     }
     

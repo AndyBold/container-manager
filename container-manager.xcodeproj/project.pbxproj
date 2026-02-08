@@ -52,6 +52,10 @@
 		125A83B62F046997009B75F9 /* ContainerSystemMonitorValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125A83B32F046997009B75F9 /* ContainerSystemMonitorValidation.swift */; };
 		125A83BC2F046D21009B75F9 /* BUILDING.md in Resources */ = {isa = PBXBuildFile; fileRef = 125A83BB2F046D21009B75F9 /* BUILDING.md */; };
 		125A83C42F046D5A009B75F9 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 125A83C32F046D5A009B75F9 /* Makefile */; };
+		12B771822F374A8C00DE8AD4 /* AnimationPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B771812F374A8C00DE8AD4 /* AnimationPreferences.swift */; };
+		12B771872F37612E00DE8AD4 /* ContainerCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B771862F37612E00DE8AD4 /* ContainerCreationView.swift */; };
+		12B771892F37617300DE8AD4 /* ContainerCreationSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B771882F37617300DE8AD4 /* ContainerCreationSteps.swift */; };
+		12B7718B2F3761BC00DE8AD4 /* ContainerCreationConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B7718A2F3761BC00DE8AD4 /* ContainerCreationConfig.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -110,6 +114,10 @@
 		12A1E92C2F0540F100F80EDE /* build-signed-dmg.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = "build-signed-dmg.yml"; sourceTree = "<group>"; };
 		12A1E92D2F0540F100F80EDE /* build-test.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = "build-test.yml"; sourceTree = "<group>"; };
 		12A1E9302F05419800F80EDE /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		12B771812F374A8C00DE8AD4 /* AnimationPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationPreferences.swift; sourceTree = "<group>"; };
+		12B771862F37612E00DE8AD4 /* ContainerCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerCreationView.swift; sourceTree = "<group>"; };
+		12B771882F37617300DE8AD4 /* ContainerCreationSteps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerCreationSteps.swift; sourceTree = "<group>"; };
+		12B7718A2F3761BC00DE8AD4 /* ContainerCreationConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerCreationConfig.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -117,6 +125,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				ContainerSystemMonitor.swift,
+				LoadingIndicator.swift,
 			);
 			target = 125A838B2F04467C009B75F9 /* container-managerTests */;
 		};
@@ -127,12 +136,20 @@
 			);
 			target = 125A83952F04467D009B75F9 /* container-managerUITests */;
 		};
+		12B771852F374DC200DE8AD4 /* Exceptions for "container-manager" folder in "container-manager" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				LoadingIndicator.swift,
+			);
+			target = 125A837E2F04467C009B75F9 /* container-manager */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		125A83812F04467C009B75F9 /* container-manager */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				12B771852F374DC200DE8AD4 /* Exceptions for "container-manager" folder in "container-manager" target */,
 				125A83AF2F046819009B75F9 /* Exceptions for "container-manager" folder in "container-managerTests" target */,
 				125A83B02F046819009B75F9 /* Exceptions for "container-manager" folder in "container-managerUITests" target */,
 			);
@@ -216,6 +233,10 @@
 				123D67362F35EFB000530346 /* PHASE3_COMPLETE.md */,
 				123D67382F35F02800530346 /* PHASE3_FINAL_SUMMARY.md */,
 				123D673E2F35F70600530346 /* ContainerTerminal.swift */,
+				12B771812F374A8C00DE8AD4 /* AnimationPreferences.swift */,
+				12B771862F37612E00DE8AD4 /* ContainerCreationView.swift */,
+				12B771882F37617300DE8AD4 /* ContainerCreationSteps.swift */,
+				12B7718A2F3761BC00DE8AD4 /* ContainerCreationConfig.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -438,10 +459,14 @@
 				123D673F2F35F70600530346 /* ContainerTerminal.swift in Sources */,
 				123D670F2F3505C600530346 /* StatsView.swift in Sources */,
 				123D67012F35053500530346 /* DesktopAppWindow.swift in Sources */,
+				12B771822F374A8C00DE8AD4 /* AnimationPreferences.swift in Sources */,
+				12B771872F37612E00DE8AD4 /* ContainerCreationView.swift in Sources */,
 				123D67092F3505A300530346 /* ImageListView.swift in Sources */,
 				123D67292F35EE1800530346 /* ContainerLogs.swift in Sources */,
+				12B771892F37617300DE8AD4 /* ContainerCreationSteps.swift in Sources */,
 				123D67212F35ECE000530346 /* ImageManagementTests.swift in Sources */,
 				123D672B2F35EE3A00530346 /* ContainerLogsView.swift in Sources */,
+				12B7718B2F3761BC00DE8AD4 /* ContainerCreationConfig.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
