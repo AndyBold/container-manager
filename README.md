@@ -8,6 +8,7 @@ A native macOS application for monitoring and managing containers. Built with Sw
 ![Swift](https://img.shields.io/badge/Swift-5.9+-orange)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-native-green)
 ![Version](https://img.shields.io/badge/version-1.1.0-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## 📸 Screenshots
 
@@ -591,7 +592,9 @@ Contributions are welcome! Areas for improvement:
 
 ## 📝 License
 
-[Your chosen license]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2026 Andrew Bold
 
 ## 🙏 Acknowledgments
 
