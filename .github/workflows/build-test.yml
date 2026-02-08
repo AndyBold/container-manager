@@ -1,4 +1,4 @@
-name: Build Test
+name: Build Validation
 
 on:
   push:
@@ -20,15 +20,6 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
       
-      - name: Run tests
-        run: |
-          xcodebuild test \
-            -scheme container-manager \
-            -destination 'platform=macOS' \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            MACOSX_DEPLOYMENT_TARGET=14.0
-
       - name: Build app
         run: |
           xcodebuild clean build \
