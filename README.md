@@ -108,8 +108,8 @@ Press `⌘M` to switch between modes!
 ## 🚀 Getting Started
 
 ### Requirements
-- macOS 14.0 or later
-- Xcode 16.0 or later
+- macOS 26.0 or later
+- Xcode 26.0 or later
 - Apple's container tool (or Docker/Podman with modifications)
 
 ### Building from Source
