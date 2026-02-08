@@ -7,6 +7,51 @@
 
 import SwiftUI
 
+// MARK: - Loading Indicator Components
+
+/// Simple inline loading view for buttons
+private struct InlineLoadingView: View {
+    let isLoading: Bool
+    let text: String
+    let loadingText: String?
+    
+    @AppStorage("showLoadingIndicators") private var showLoadingIndicators = true
+    
+    var body: some View {
+        if isLoading && showLoadingIndicators {
+            HStack(spacing: 6) {
+                ProgressView()
+                    .scaleEffect(0.8)
+                    .controlSize(.small)
+                Text(loadingText ?? text)
+            }
+        } else {
+            Text(text)
+        }
+    }
+}
+
+/// Small loading indicator
+private struct LoadingIndicator: View {
+    enum Size {
+        case small
+        
+        var dimension: CGFloat { 16 }
+    }
+    
+    let size: Size
+    
+    @AppStorage("showLoadingIndicators") private var showLoadingIndicators = true
+    
+    var body: some View {
+        if showLoadingIndicators {
+            ProgressView()
+                .scaleEffect(0.7)
+                .controlSize(.small)
+        }
+    }
+}
+
 struct ContentView: View {
     @EnvironmentObject var containerMonitor: ContainerSystemMonitor
     @Environment(\.openWindow) private var openWindow
@@ -38,9 +83,15 @@ struct ContentView: View {
                 VStack(alignment: .leading) {
                     Text("Container System")
                         .font(.headline)
-                    Text(containerMonitor.status.displayName)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        Text(containerMonitor.status.displayName)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        
+                        if containerMonitor.isRefreshing {
+                            LoadingIndicator(size: .small)
+                        }
+                    }
                 }
                 
                 Spacer()
@@ -182,8 +233,14 @@ struct ContentView: View {
                         .font(.body)
                         .foregroundStyle(.secondary)
                     
-                    Button("Start Service") {
+                    Button {
                         containerMonitor.startContainerService()
+                    } label: {
+                        InlineLoadingView(
+                            isLoading: containerMonitor.isOperating,
+                            text: "Start Service",
+                            loadingText: "Starting..."
+                        )
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(containerMonitor.isOperating)
@@ -236,13 +293,19 @@ struct ContentView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     
-                    Button("Refresh") {
+                    Button {
                         containerMonitor.checkContainerStatus()
+                    } label: {
+                        InlineLoadingView(
+                            isLoading: containerMonitor.isRefreshing,
+                            text: "Refresh",
+                            loadingText: "Refreshing..."
+                        )
                     }
                     .keyboardShortcut("r", modifiers: .command)
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .disabled(containerMonitor.isOperating)
+                    .disabled(containerMonitor.isOperating || containerMonitor.isRefreshing)
                 }
                 
                 // Service control and quit row
@@ -250,9 +313,15 @@ struct ContentView: View {
                     // Service control button
                     if containerMonitor.status == .running {
                         if showStopConfirmation {
-                            Button("Confirm Stop", role: .destructive) {
+                            Button(role: .destructive) {
                                 showStopConfirmation = false
                                 containerMonitor.stopContainerService()
+                            } label: {
+                                InlineLoadingView(
+                                    isLoading: containerMonitor.isOperating,
+                                    text: "Confirm Stop",
+                                    loadingText: "Stopping..."
+                                )
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(.red)
@@ -275,8 +344,14 @@ struct ContentView: View {
                             Spacer()
                         }
                     } else if containerMonitor.status == .stopped {
-                        Button("Start Service") {
+                        Button {
                             containerMonitor.startContainerService()
+                        } label: {
+                            InlineLoadingView(
+                                isLoading: containerMonitor.isOperating,
+                                text: "Start Service",
+                                loadingText: "Starting..."
+                            )
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)

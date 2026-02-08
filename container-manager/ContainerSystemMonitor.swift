@@ -315,6 +315,7 @@ class ContainerSystemMonitor: ObservableObject {
     @Published var containers: [ContainerInfo] = []
     @Published var lastUpdated: Date = Date()
     @Published var isOperating: Bool = false // Track if start/stop operation is in progress
+    @Published var isRefreshing: Bool = false // Track if containers are being refreshed
     @Published var statsCollector: StatsCollector?
     
     private var timer: Timer?
@@ -404,6 +405,16 @@ class ContainerSystemMonitor: ObservableObject {
     }
     
     func checkAppleContainerStatus() async {
+        await MainActor.run {
+            isRefreshing = true
+        }
+        
+        defer {
+            Task { @MainActor in
+                isRefreshing = false
+            }
+        }
+        
         guard let containerPath else {
             await MainActor.run {
                 let wasRunning = status == .running
@@ -522,18 +533,94 @@ class ContainerSystemMonitor: ObservableObject {
         // Try different remove commands depending on the container tool
         // Apple container tool uses "delete"
         var success = await performContainerOperation(command: "delete", containerName: name, additionalArgs: [])
-        
+
         if !success {
             // Try "rm" without force flag (for stopped containers)
             success = await performContainerOperation(command: "rm", containerName: name, additionalArgs: [])
         }
-        
+
         if !success {
             // Fall back to "rm -f" (force remove, for running containers)
             success = await performContainerOperation(command: "rm", containerName: name, additionalArgs: ["-f"])
         }
-        
+
         return success
+    }
+
+    func createContainer(config: ContainerCreationConfig) async -> (success: Bool, errorMessage: String?) {
+        guard let containerPath else {
+            return (false, "Container tool not found")
+        }
+
+        await MainActor.run {
+            isOperating = true
+        }
+
+        defer {
+            Task { @MainActor in
+                isOperating = false
+            }
+        }
+
+        // Build the command arguments
+        var args = ["run", "-d"] // -d for detached mode
+
+        // Name
+        args.append(contentsOf: ["--name", config.containerName])
+
+        // Port mappings
+        for port in config.portMappings where !port.hostPort.isEmpty && !port.containerPort.isEmpty {
+            args.append(contentsOf: ["-p", "\(port.hostPort):\(port.containerPort)/\(port.protocolType)"])
+        }
+
+        // Volume mounts
+        for volume in config.volumeMounts where !volume.hostPath.isEmpty && !volume.containerPath.isEmpty {
+            let mountSpec = volume.readOnly ? "\(volume.hostPath):\(volume.containerPath):ro" : "\(volume.hostPath):\(volume.containerPath)"
+            args.append(contentsOf: ["-v", mountSpec])
+        }
+
+        // Environment variables
+        for envVar in config.environmentVariables where !envVar.key.isEmpty {
+            args.append(contentsOf: ["-e", "\(envVar.key)=\(envVar.value)"])
+        }
+
+        // Image
+        args.append(config.selectedImage)
+
+        // Command
+        if !config.command.isEmpty {
+            // Split command into components (simple space splitting, could be improved)
+            let commandComponents = config.command.components(separatedBy: " ")
+            args.append(contentsOf: commandComponents)
+        }
+
+        // Execute the command
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: containerPath)
+        process.arguments = args
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+
+        do {
+            try await Task.detached {
+                try process.run()
+                process.waitUntilExit()
+            }.value
+
+            if process.terminationStatus == 0 {
+                return (true, nil)
+            } else {
+                // Read error output
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let output = String(data: data, encoding: .utf8) ?? ""
+                let errorMessage = output.isEmpty ? "Container creation failed with exit code \(process.terminationStatus)" : output.trimmingCharacters(in: .whitespacesAndNewlines)
+                return (false, errorMessage)
+            }
+        } catch {
+            return (false, "Failed to execute container command: \(error.localizedDescription)")
+        }
     }
     
     private func performContainerOperation(command: String, containerName: String, additionalArgs: [String] = []) async -> Bool {
