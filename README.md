@@ -7,6 +7,7 @@ A native macOS application for monitoring and managing containers. Built with Sw
 ![macOS](https://img.shields.io/badge/macOS-14.0+-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9+-orange)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-native-green)
+![Version](https://img.shields.io/badge/version-1.1.0-brightgreen)
 
 ## 📸 Screenshots
 
@@ -59,7 +60,10 @@ Press `⌘M` to switch between modes!
 - **Menu Bar App** - Lives in your menu bar, hidden from Dock and App Switcher
 - **Container Monitoring** - Real-time monitoring of all containers (running and stopped)
 - **Container Management** - Start, stop, restart, and remove containers
+- **Container Creation** - Wizard-guided container creation with step-by-step configuration
+- **Batch Operations** - Multi-select containers for bulk start, stop, restart, or remove
 - **Service Control** - Start and stop the container service
+- **Real-time Statistics** - CPU, memory, network, and disk I/O monitoring with live charts
 - **Auto-refresh** - Updates every 10 seconds automatically
 - **Smart Updates** - Only refreshes when actual changes occur
 
@@ -83,6 +87,15 @@ Press `⌘M` to switch between modes!
 - **Stop** - Stop running containers
 - **Restart** - Restart containers
 - **Remove** - Delete containers (with confirmation)
+- **Batch Actions** - Select multiple containers for bulk operations
+- **Create Container** - 7-step wizard for new container creation
+  - Image selection with search and custom image support
+  - Basic configuration (name, command)
+  - Port mapping configuration
+  - Volume mount setup
+  - Environment variable management
+  - Network configuration
+  - Configuration review and confirmation
 
 ### ⌨️ Keyboard Shortcuts
 - **⌘M** - Open Manager Window (Desktop App)
@@ -125,19 +138,29 @@ After building:
 
 ### Creating a Release Build
 
-We use a local build system for releases (no CI/CD required):
+We use a local build system with proper code signing for releases:
 
 ```bash
-# One-command release workflow
-make release-workflow
-# Enter version: v1.0.0
+# For development/testing (unsigned)
+make dmg
 
-# Or step by step
-make clean dmg
-make upload-release VERSION=v1.0.0
+# For public distribution (signed + notarized)
+make dmg-signed
+make notarize APPLE_ID=your-email@example.com
+make upload-release VERSION=v1.1.0
 ```
 
-This creates a DMG package and uploads it to GitHub as a draft release. See [`RELEASE_QUICK_START.md`](RELEASE_QUICK_START.md) for details.
+**Documentation:**
+- [`SIGNED_RELEASE_GUIDE.md`](SIGNED_RELEASE_GUIDE.md) - Complete guide for signed releases
+- [`RELEASE_QUICK_START.md`](RELEASE_QUICK_START.md) - Quick reference for releases
+- [`docs/CODE_SIGNING_GUIDE.md`](docs/CODE_SIGNING_GUIDE.md) - Technical code signing reference
+
+**Available Build Targets:**
+- `make dmg` - Unsigned DMG for development
+- `make dmg-signed` - Signed DMG with Developer ID
+- `make notarize` - Submit for Apple notarization
+- `make check-signing` - Verify code signing status
+- `make upload-release` - Upload to GitHub as draft release
 
 ## 🎨 User Interface
 
@@ -205,11 +228,15 @@ Both modes share a single `ContainerSystemMonitor` instance for synchronized sta
 - **ContainerListView.swift** - Enhanced list/grid views with inspector
 - **ContainerInspectorView.swift** - Detailed container information panel
 - **ContainerActions.swift** - Reusable action menus and context menus
+- **ContainerCreationView.swift** - 7-step container creation wizard
+- **ContainerCreationSteps.swift** - Individual wizard step implementations
+- **ContainerCreationConfig.swift** - Configuration data model
 - **ImageListView.swift** - Image management interface
 - **VolumeListView.swift** - Volume management
 - **NetworkListView.swift** - Network management
-- **StatsView.swift** - Real-time statistics dashboard
+- **StatsView.swift** - Real-time statistics dashboard with live charts
 - **SettingsView.swift** - Application preferences
+- **AnimationPreferences.swift** - Accessibility-aware animation controls
 
 #### `ContainerSystemMonitor.swift`
 - Container system monitoring
@@ -461,15 +488,30 @@ container-manager/
 ├── ContainerListView.swift            # Enhanced container list
 ├── ContainerInspectorView.swift       # Inspector panel
 ├── ContainerActions.swift             # Reusable actions
+├── ContainerCreationView.swift        # Container creation wizard
+├── ContainerCreationSteps.swift       # Wizard step implementations
+├── ContainerCreationConfig.swift      # Configuration model
 ├── ImageListView.swift                # Image management
 ├── VolumeListView.swift               # Volume management
 ├── NetworkListView.swift              # Network management
 ├── StatsView.swift                    # Statistics dashboard
 ├── SettingsView.swift                 # Preferences
+├── AnimationPreferences.swift         # Accessibility animations
+├── LoadingIndicator.swift             # Loading states
 ├── Assets.xcassets/                   # Images and icons
+├── Makefile                           # Build automation
+├── scripts/
+│   ├── create-dmg.sh                 # DMG creation script
+│   └── check-signing.sh              # Code signing verification
+├── docs/
+│   ├── CODE_SIGNING_GUIDE.md         # Code signing reference
+│   └── development/                  # Development docs
+├── SIGNED_RELEASE_GUIDE.md           # Release workflow guide
+├── CHANGELOG.md                      # Version history
 └── Tests/
     ├── ContainerSystemMonitorTests.swift
-    └── ContainerSystemMonitorValidation.swift
+    ├── NetworkManagementTests.swift
+    └── VolumeManagementTests.swift
 ```
 
 ### Testing
@@ -513,15 +555,18 @@ Contributions are welcome! Areas for improvement:
 - [x] Full desktop application interface
 - [x] Enhanced container list with grid/list views
 - [x] Inspector panel for detailed information
-- [x] Statistics dashboard
+- [x] Statistics dashboard with live charts
 - [x] Settings and preferences
+- [x] Container creation wizard (7-step guided process)
+- [x] Batch operations for containers
+- [x] Code signing and notarization workflow
 - [ ] Container log viewer with live streaming
 - [ ] Terminal/exec integration
 - [ ] Image pull/push with progress
 - [ ] Docker/Podman compatibility layer
 
 ### Medium Priority
-- [ ] Container creation wizard
+- [ ] Container templates for quick creation
 - [ ] Volume browser with file navigation
 - [ ] Network configuration UI
 - [ ] Compose file support
@@ -561,32 +606,36 @@ Contributions are welcome! Areas for improvement:
 
 ## 🗺️ Roadmap
 
-### Version 2.0 (Current)
+### Version 1.1.0 (Current - February 2026)
 - [x] Full desktop application
 - [x] Enhanced container list with grid view
 - [x] Inspector panel
-- [x] Statistics dashboard
+- [x] Statistics dashboard with live charts
 - [x] Settings interface
 - [x] Dual-mode operation (menu bar + desktop)
+- [x] Container creation wizard (7-step guided process)
+- [x] Batch operations for multiple containers
+- [x] Code signing and notarization workflow
+- [x] Animation preferences with accessibility support
 
-### Version 2.1
-- [ ] Container logs viewer with live streaming
+### Version 1.2.0
+- [ ] Container log viewer with live streaming
 - [ ] Terminal/exec integration
-- [ ] Image pull/push interface
-- [ ] Container creation wizard
+- [ ] Image pull/push interface with progress
+- [ ] Container templates for quick creation
 
-### Version 2.2
-- [ ] Volume browser
+### Version 1.3.0
+- [ ] Volume browser with file navigation
 - [ ] Network configuration UI
 - [ ] Docker/Podman auto-detection
-- [ ] Historical statistics
+- [ ] Historical statistics and analytics
 
-### Version 3.0
+### Version 2.0.0
 - [ ] Compose file support
 - [ ] Multi-host/remote management
-- [ ] Advanced filtering
+- [ ] Advanced filtering and search
 - [ ] Custom actions/scripts
-- [ ] Cloud integration
+- [ ] Cloud registry integration
 
 ---
 
